@@ -130,7 +130,8 @@ class Index extends Base
      */
     public function captcha()
     {
-        return Captcha::create_isolate();
+        $captcha = Captcha::create_isolate();
+        return $this->message(200, '成功', $captcha);
     }
 
     /**

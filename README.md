@@ -5,6 +5,35 @@ rbac-admin
 
 运行环境：`PHP7.4+mysql5.7+nginx1.2+reids`
 
+-[gitee](https://gitee.com/An_mixiu/rbac-admin)
+
+-[前端](https://github.com/you-heng/vue-rbac-admin)
+
+-[gitee前端](https://gitee.com/An_mixiu/vue-rbac-admin)
+
+-[演示站](http://vue.anmixiu.com/rbac)
+
+账号：demo
+
+密码：123456
+
+#### nginx配置
+
+在配置中增加以下内容
+
+```
+location / {
+    root /www/wwwroot/xx.xx.com/xx; # 项目所在目录
+    index index.html;
+    try_files $uri $uri/ /index.html;
+}
+
+location /api {
+    rewrite ^/api?(.*)$ $1 break;
+    proxy_pass http://xx.xx.com/; # 接口
+}
+```
+
 ## 命名规范
 
 请理解并尽量遵循以下命名规范，可以减少在开发过程中出现不必要的错误
