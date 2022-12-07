@@ -22,7 +22,10 @@ class Dict extends Seeder
             ],
             1 => [
                 'key' => 'user_avatar',
-                'val' => 'http://81.71.88.243/avatar.jpg',
+                'val' => json_encode([
+                    "name" => "Ft0mabo_PxdNGeUCi81qGPXcMnWe",
+                    "url" => "http://sys.anmixiu.com/ad7bc863acc50ad3b747c51c2f85b431.jpg"
+                ]),
                 'remark' => '用户默认头像'
             ],
             2 => [

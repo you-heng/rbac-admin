@@ -21,6 +21,11 @@ class Index extends Base
     public function index()
     {
         echo 'index';
+        /*$avatar = json_encode([
+            "name" => "Ft0mabo_PxdNGeUCi81qGPXcMnWe",
+            "url" => "http://sys.anmixiu.com/ad7bc863acc50ad3b747c51c2f85b431.jpg"
+        ]);
+        dictModel::where('key', 'user_avatar')->update(['val' => $avatar]);*/
     }
 
     /**
@@ -38,7 +43,7 @@ class Index extends Base
         if(!$captcha){
             return $this->message(201, '验证码错误');
         }
-        $admin = adminModel::where('username', $data['username'])->field('username,password,avatar,role_ids,is_state')->find()->toArray();
+        $admin = adminModel::where('username', $data['username'])->field('username,password,email,phone,avatar,role_ids,is_state')->find()->toArray();
         if($admin['username'] != $data['username'] || $admin['password'] != encry($data['password'])){
             return $this->message(201, '账号密码错误');
         }
@@ -65,12 +70,15 @@ class Index extends Base
             'jti' => md5(uniqid('JWT').time()), // 唯一标识
         ];
         $jwt = JWT::encode($payload, $config['jwt_key'], 'HS256');
+        $admin['avatar'] = json_decode($admin['avatar'], true);
         $username = [
             'username' => $data['username'],
             'password' => $data['password'],
             'token' => $jwt,
             'uniquid' => $payload['jti'],
             'role' => $role,
+            'email' => $admin['email'],
+            'phone' => $admin['phone'],
             'avatar' => $admin['avatar']
         ];
         Cache::store('redis')->set($username['uniquid'], json_encode($username));
@@ -146,5 +154,53 @@ class Index extends Base
             return $this->message(201, '成功', $config);
         }
         return $this->message(201, '暂无内容~');
+    }
+
+    /**
+     * 更新用户信息
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function userinfo()
+    {
+        $data = Request::post();
+        $data['avatar'] = json_encode($data['avatar']);
+        adminModel::where('username', $data['username'])->update($data);
+        $admin = adminModel::where('username', $data['username'])->field('username,email,phone,avatar')->find()->toArray();
+        $admin['avatar'] = json_decode($admin['avatar'], true);
+        $uniquid = Request::header('uniquid');
+        $user = Cache::store('redis')->get($uniquid);
+        $user = json_decode($user, true);
+        $user['email'] = $admin['email'];
+        $user['phone'] = $admin['phone'];
+        $user['avatar'] = $admin['avatar'];
+        Cache::store('redis')->set($uniquid, json_encode($user));
+        return $this->message(200, '更新成功', $user);
+    }
+
+    /**
+     * 修改密码
+     * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function pass()
+    {
+        $data = Request::post();
+        $password = encry($data['password']);
+        $admin = adminModel::where('username', $data['username'])->field('username,password')->find();
+        if($admin['password'] != $password){
+            return $this->message(201, '旧密码不正确');
+        }
+        if($data['newPassword'] != $data['makePassword']){
+            return $this->message(201, '两次密码不一致');
+        }
+        $new = encry($data['newPassword']);
+        adminModel::where('username', $data['username'])->update(['password' => $new]);
+        return $this->message(200, '密码修改成功，请重新登录');
     }
 }

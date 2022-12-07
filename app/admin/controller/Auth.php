@@ -4,8 +4,10 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Auth as authModel;
+use think\exception\ValidateException;
 use think\facade\Cache;
 use think\facade\Request;
+use app\admin\validate\Auth as authValidate;
 
 class Auth extends Base
 {
@@ -34,6 +36,7 @@ class Auth extends Base
     public function create()
     {
         $data = Request::post();
+        $this->check($data);
         $result = authModel::create($data);
         if(!$result){
             return $this->message(201, '添加失败');
@@ -48,11 +51,33 @@ class Auth extends Base
     public function update()
     {
         $data = Request::post();
+        $this->check($data);
         $result = authModel::update($data);
         if(!$result){
             return $this->message(201, '修改失败');
         }
         return $this->message(200, '修改成功');
+    }
+
+    /**
+     * 验证
+     * @param $data
+     * @return \think\Response|void
+     */
+    public function check($data)
+    {
+        $type = '';
+        if($data['is_menu'] == 1){
+            $type = 'create';
+        }else{
+            $type = 'update';
+        }
+        try {
+            validate(authValidate::class)->scene($type)->check($data);
+        }catch (ValidateException $e){
+            $msg = $e->getError();
+            return $this->message(201, $msg);
+        }
     }
 
     /**

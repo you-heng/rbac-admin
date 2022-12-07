@@ -8,8 +8,9 @@ use app\admin\model\Role as roleModel;
 use app\admin\model\Job as jobModel;
 use app\admin\model\Team as teamModel;
 use app\admin\model\Dict as dictModel;
+use think\exception\ValidateException;
 use think\facade\Request;
-use think\facade\Validate;
+use app\admin\validate\Admin as adminValidate;
 
 class Admin extends Base
 {
@@ -129,24 +130,13 @@ class Admin extends Base
     public function create()
     {
         $data = Request::post();
-        Validate::check([
-            'username' => '',
-        ]);
+        $this->check($data);
         $config = dictModel::where('is_state' , 1)->where('key', 'in', ['user_pass', 'user_avatar', 'user_phone', 'user_email'])->field('key,val')->select()->toArray();
-        foreach($config as $v){
-            if($v['key'] === 'user_pass'){
-                $data['password'] = encry($v['val']);
-            }
-            if($v['key'] === 'user_avatar'){
-                $data['avatar'] = $v['val'];
-            }
-            if($v['key'] === 'user_phone'){
-                $data['phone'] = $v['val'];
-            }
-            if($v['key'] === 'user_email'){
-                $data['email'] = $v['val'];
-            }
-        }
+        $config = array_column($config, 'val', 'key');
+        $data['password'] = encry($config['user_pass']);
+        $data['avatar'] = $config['user_avatar'];
+        $data['phone'] = $config['user_phone'];
+        $data['email'] = $config['user_email'];
         $data['job_id'] = $data['job_id'][0];
         $result = adminModel::create($data);
         if(!$result){
@@ -162,6 +152,7 @@ class Admin extends Base
     public function update()
     {
         $data = Request::post();
+        $this->check($data);
         unset($data['password']);
         $data['job_id'] = $data['job_id'][0];
         $result = adminModel::update($data);
@@ -169,6 +160,21 @@ class Admin extends Base
             return $this->message(201, '修改失败');
         }
         return $this->message(200, '修改成功');
+    }
+
+    /**
+     * 验证
+     * @param $data
+     * @return \think\Response|void
+     */
+    public function check($data)
+    {
+        try {
+            validate(adminValidate::class)->scene('create')->check($data);
+        }catch (ValidateException $e){
+            $msg = $e->getError();
+            return $this->message(201, $msg);
+        }
     }
 
     /**

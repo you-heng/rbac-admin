@@ -4,8 +4,10 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Job as jobModel;
+use think\exception\ValidateException;
 use think\facade\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use app\admin\validate\Job as jobValidate;
 
 class Job extends Base
 {
@@ -38,6 +40,7 @@ class Job extends Base
     public function create()
     {
         $data = Request::post();
+        $this->check($data);
         $result = jobModel::create($data);
         if(!$result){
             return $this->message(201, '添加失败');
@@ -52,11 +55,27 @@ class Job extends Base
     public function update()
     {
         $data = Request::post();
+        $this->check($data);
         $result = jobModel::update($data);
         if(!$result){
             return $this->message(201, '修改失败');
         }
         return $this->message(200, '修改成功');
+    }
+
+    /**
+     * 验证
+     * @param $data
+     * @return \think\Response|void
+     */
+    public function check($data)
+    {
+        try {
+            validate(jobValidate::class)->scene('create')->check($data);
+        }catch (ValidateException $e){
+            $msg = $e->getError();
+            return $this->message(201, $msg);
+        }
     }
 
     /**

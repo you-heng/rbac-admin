@@ -4,7 +4,9 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Role as roleModel;
+use think\exception\ValidateException;
 use think\facade\Request;
+use app\admin\validate\Role as roleValidate;
 
 class Role extends Base
 {
@@ -37,6 +39,7 @@ class Role extends Base
     public function create()
     {
         $data = Request::post();
+        $this->check($data);
         $result = roleModel::create($data);
         if(!$result){
             return $this->message(201, '添加失败');
@@ -51,11 +54,27 @@ class Role extends Base
     public function update()
     {
         $data = Request::post();
+        $this->check($data);
         $result = roleModel::update($data);
         if(!$result){
             return $this->message(201, '修改失败');
         }
         return $this->message(200, '修改成功');
+    }
+
+    /**
+     * 验证
+     * @param $data
+     * @return \think\Response|void
+     */
+    public function check($data)
+    {
+        try {
+            validate(roleValidate::class)->scene('create')->check($data);
+        }catch (ValidateException $e){
+            $msg = $e->getError();
+            return $this->message(201, $msg);
+        }
     }
 
     /**

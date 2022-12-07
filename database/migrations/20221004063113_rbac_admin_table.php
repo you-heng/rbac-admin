@@ -31,7 +31,7 @@ class RbacAdminTable extends Migrator
         $table = $this->table('admin', ['engine' => 'MyISAM', 'collation' => 'utf8_unicode_ci', 'comment' => '' ,'id' => 'id' ,'primary_key' => ['id']]);
         $table->addColumn('username', 'string', ['limit' => 20,'null' => false,'default' => null,'signed' => true,'comment' => '用户名'])
             ->addColumn('password', 'char', ['limit' => 32,'null' => false,'default' => null,'signed' => true,'comment' => '密码'])
-            ->addColumn('avatar', 'string', ['limit' => 150,'null' => false,'default' => null,'signed' => true,'comment' => '头像'])
+            ->addColumn('avatar', 'string', ['limit' => 255,'null' => false,'default' => null,'signed' => true,'comment' => '头像'])
             ->addColumn('phone', 'char', ['limit' => 11,'null' => false,'default' => null,'signed' => true,'comment' => '手机号'])
             ->addColumn('email', 'string', ['limit' => 80,'null' => false,'default' => null,'signed' => true,'comment' => '邮箱'])
             ->addColumn('role_ids', 'json', ['limit' => 80,'null' => false,'default' => null,'signed' => true,'comment' => '角色id组'])

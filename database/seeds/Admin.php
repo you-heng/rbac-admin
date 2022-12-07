@@ -18,7 +18,10 @@ class Admin extends Seeder
         $data = [
             'username' => 'admin',
             'password' => md5(sha1(md5(123456, Config::get('admin.password_salt')))),
-            'avatar' => 'http://81.71.88.243/avatar.jpg',
+            'avatar' => json_encode([
+                "name" => "Ft0mabo_PxdNGeUCi81qGPXcMnWe",
+                "url" => "http://sys.anmixiu.com/ad7bc863acc50ad3b747c51c2f85b431.jpg"
+            ]),
             'phone' => '15000000000',
             'email' => '123456@qq.com',
             'role_ids' => json_encode(['超级管理员']),
