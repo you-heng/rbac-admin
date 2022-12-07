@@ -5,13 +5,13 @@ rbac-admin
 
 运行环境：`PHP7.4+mysql5.7+nginx1.2+reids`
 
--[gitee](https://gitee.com/An_mixiu/rbac-admin)
+- [gitee](https://gitee.com/An_mixiu/rbac-admin)
 
--[前端](https://github.com/you-heng/vue-rbac-admin)
+- [前端](https://github.com/you-heng/vue-rbac-admin)
 
--[gitee前端](https://gitee.com/An_mixiu/vue-rbac-admin)
+- [gitee前端](https://gitee.com/An_mixiu/vue-rbac-admin)
 
--[演示站](http://vue.anmixiu.com/rbac)
+- [演示站](http://vue.anmixiu.com/rbac)
 
 账号：demo
 
