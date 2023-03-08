@@ -8,6 +8,8 @@ namespace app\admin\model;
  */
 class Admin extends Base
 {
+    // 设置表名
+    protected $name = 'admin';
     // 设置json类型字段
     protected $json = ['role_ids', 'team_ids'];
 

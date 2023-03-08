@@ -42,7 +42,7 @@ function menu_tree($data){
 // 过滤字段
 function fields($data){
     $menu = [];
-    foreach($data as $k => $v){
+    foreach($data as $v){
         $menu[$v['id']]['id'] = $v['id'];
         $menu[$v['id']]['name'] = $v['title'];
         $menu[$v['id']]['path'] = $v['path'];
@@ -72,7 +72,7 @@ function get_p_name($data, $name, $file){
 function tree_data($data, $pid = 0)
 {
     $tree = [];
-    foreach($data as $k => $v){
+    foreach($data as $v){
         if($v['pid'] == $pid){
             $v['children'] = tree_data($data, $v['id']);
             $tree[] = $v;

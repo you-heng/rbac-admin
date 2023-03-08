@@ -24,12 +24,7 @@ class Role extends Base
             return $this->message(201, '暂无内容～');
         }
         $count = roleModel::count('id');
-        return $this->message(200, '请求成功', [
-            'page' => $this->page,
-            'limit' => $this->limit,
-            'count' => $count,
-            'data' => $result
-        ]);
+        return $this->message_list(200, '请求成功', $count, $result);
     }
 
     /**

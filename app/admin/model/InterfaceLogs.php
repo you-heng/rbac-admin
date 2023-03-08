@@ -3,14 +3,12 @@ declare (strict_types = 1);
 
 namespace app\admin\model;
 
-use think\Model;
-
 /**
  * @mixin \think\Model
  */
-class Record extends Model
+class InterfaceLogs extends Base
 {
-    protected $name = 'login_log';
+    protected $name = 'interface_logs';
 
     public function searchIdAttr($query, $value, $data)
     {

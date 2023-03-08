@@ -3,44 +3,39 @@ declare (strict_types = 1);
 
 namespace app\admin\controller;
 
-use app\admin\model\Dict as dictModel;
 use think\exception\ValidateException;
+use app\admin\validate\BlackList as blackListValidate;
+use app\admin\model\BlackList as blackListModel;
 use think\facade\Request;
-use app\admin\validate\Dict as dictValidate;
 
-class Dict extends Base
+class BlackList extends Base
 {
     /**
-     * 列表
      * @return \think\Response
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
+     * 列表
      */
     public function index()
     {
-        $result = dictModel::page($this->page, $this->limit)->order('sort', 'desc')->select()->toArray();
+        $result = blackListModel::page($this->page, $this->limit)->order('sort', 'desc')->select();
         if(!$result){
-            return $this->message(201, '暂无内容～');
+            return $this->message(201, '暂无内容~');
         }
-        foreach($result as $k => $v){
-            if($v['is_type'] == 2 || $v['is_type'] == 3){
-                $result[$k]['val'] = json_decode($v['val'], true);
-            }
-        }
-        $count = dictModel::count('id');
+        $count = blackListModel::count('id');
         return $this->message_list(200, '请求成功', $count, $result);
     }
 
     /**
-     * 添加
      * @return \think\Response
+     * 添加
      */
     public function create()
     {
         $data = Request::post();
         $this->check($data);
-        $result = dictModel::create($data);
+        $result = blackListModel::create($data);
         if(!$result){
             return $this->message(201, '添加失败');
         }
@@ -48,14 +43,14 @@ class Dict extends Base
     }
 
     /**
-     * 编辑
      * @return \think\Response
+     * 修改
      */
     public function update()
     {
         $data = Request::post();
         $this->check($data);
-        $result = dictModel::update($data);
+        $result = blackListModel::update($data);
         if(!$result){
             return $this->message(201, '修改失败');
         }
@@ -63,14 +58,14 @@ class Dict extends Base
     }
 
     /**
-     * 验证
      * @param $data
      * @return \think\Response|void
+     * 验证
      */
     public function check($data)
     {
         try {
-            validate(dictValidate::class)->scene('create')->check($data);
+            validate(blackListValidate::class)->scene('create')->check($data);
         }catch (ValidateException $e){
             $msg = $e->getError();
             return $this->message(201, $msg);
@@ -78,13 +73,13 @@ class Dict extends Base
     }
 
     /**
-     * 删除
      * @return \think\Response
+     * 删除
      */
     public function remove()
     {
         $id = Request::post('id');
-        $result = dictModel::destroy($id);
+        $result = blackListModel::destroy($id);
         if(!$result){
             return $this->message(201, '删除失败');
         }
@@ -92,13 +87,13 @@ class Dict extends Base
     }
 
     /**
-     * 批量删除
      * @return \think\Response
+     * 批量删除
      */
     public function batch_remove()
     {
         $ids = Request::post('ids');
-        $result = dictModel::destroy($ids);
+        $result = blackListModel::destroy($ids);
         if(!$result){
             return $this->message(201, '删除失败');
         }
@@ -106,29 +101,12 @@ class Dict extends Base
     }
 
     /**
-     * 搜索
      * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     */
-    public function search()
-    {
-        $data = Request::post();
-        $result = dictModel::withSearch([$data['select']], [$data['select'] => $data['search']])->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容~');
-        }
-        return $this->message(200, '请求成功', $result);
-    }
-
-    /**
      * 清空
-     * @return \think\Response
      */
     public function remove_all()
     {
-        $result = dictModel::where('1=1')->delete();
+        $result = blackListModel::where('1=1')->delete();
         if(!$result){
             return $this->message(201, '清空失败');
         }
@@ -136,8 +114,25 @@ class Dict extends Base
     }
 
     /**
-     * 状态
      * @return \think\Response
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 搜索
+     */
+    public function search()
+    {
+        $data = Request::post();
+        $result = blackListModel::withSearch([$data['select']], [$data['select'] => $data['search']])->select()->toArray();
+        if(!$result){
+            return $this->message(201, '暂无内容~');
+        }
+        return $this->message(200, '请求成功', $result);
+    }
+
+    /**
+     * @return \think\Response
+     * 状态
      */
     public function is_state()
     {
@@ -148,10 +143,31 @@ class Dict extends Base
             $is_state = 2;
             $msg = '禁用';
         }
-        $result = dictModel::where('id', $data['id'])->update(['is_state' => $is_state]);
+        $result = blackListModel::update([
+            'id' => $data['id'],
+            'is_state' => $is_state
+        ]);
         if(!$result){
-            return $this->message(201, $msg . '失败');
+            return $this->message(203, $msg . '失败');
         }
         return $this->message(200, $msg . '成功');
+    }
+
+    /**
+     * 批量导出
+     * @return void
+     */
+    public function batch_down()
+    {
+
+    }
+
+    /**
+     * 全部导出
+     * @return void
+     */
+    public function down_all()
+    {
+
     }
 }

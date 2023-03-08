@@ -4,9 +4,9 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use think\facade\Request;
-use app\admin\model\Record as recordModel;
+use app\admin\model\InterfaceLogs as InterfaceLogsModel;
 
-class Record extends Base
+class InterfaceLogs extends Base
 {
     /**
      * 列表
@@ -17,17 +17,12 @@ class Record extends Base
      */
     public function index()
     {
-        $result = recordModel::page($this->page, $this->limit)->select();
+        $result = InterfaceLogsModel::page($this->page, $this->limit)->order('sort', 'desc')->select();
         if($result->isEmpty()){
             return $this->message(201, '暂无内容~');
         }
-        $count = recordModel::count('id');
-        return $this->message(200, '请求成功', [
-            'page' => $this->page,
-            'limit' => $this->limit,
-            'count' => $count,
-            'data' => $result
-        ]);
+        $count = InterfaceLogsModel::count('id');
+        return $this->message_list(200, '请求成功', $count, $result);
     }
 
     /**
@@ -40,7 +35,7 @@ class Record extends Base
     public function search()
     {
         $data = Request::post();
-        $result = recordModel::withSearch([$data['select']], [$data['select'] => $data['search']])->select()->toArray();
+        $result = InterfaceLogsModel::withSearch([$data['select']], [$data['select'] => $data['search']])->select()->toArray();
         if(!$result){
             return $this->message(201, '暂无内容~');
         }
@@ -54,7 +49,7 @@ class Record extends Base
     public function remove()
     {
         $id = Request::post('id');
-        $result = recordModel::destroy($id);
+        $result = InterfaceLogsModel::destroy($id);
         if(!$result){
             return $this->message(201, '删除失败');
         }
@@ -68,7 +63,7 @@ class Record extends Base
     public function batch_remove()
     {
         $ids = Request::post('ids');
-        $result = recordModel::destroy($ids);
+        $result = InterfaceLogsModel::destroy($ids);
         if(!$result){
             return $this->message(201, '删除失败');
         }
@@ -81,7 +76,7 @@ class Record extends Base
      */
     public function remove_all()
     {
-        $result = recordModel::where('1=1')->delete();
+        $result = InterfaceLogsModel::where('1=1')->delete();
         if(!$result){
             return $this->message(201, '清空失败');
         }

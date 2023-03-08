@@ -20,7 +20,7 @@ class Auth extends Base
      */
     public function index()
     {
-        $result = authModel::order('sort', 'desc')->select()->toArray();
+        $result = authModel::order('sort', 'desc')->order('sort', 'desc')->select()->toArray();
         if(!$result){
             return $this->message(201, '暂无内容～');
         }

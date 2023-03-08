@@ -8,9 +8,10 @@ use app\admin\model\Role as roleModel;
 use app\admin\model\Job as jobModel;
 use app\admin\model\Team as teamModel;
 use app\admin\model\Dict as dictModel;
+use think\Exception;
 use think\exception\ValidateException;
-use think\facade\Request;
 use app\admin\validate\Admin as adminValidate;
+use think\facade\Request;
 
 class Admin extends Base
 {
@@ -23,22 +24,22 @@ class Admin extends Base
      */
     public function index()
     {
-        $result = adminModel::alias('t1')
-            ->leftJoin('job t2', 't1.job_id=t2.id')
-            ->field('t1.*,t2.job_name')
-            ->page($this->page, $this->limit)
-            ->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容～');
+        try {
+            $result = adminModel::alias('t1')
+                ->leftJoin('job t2', 't1.job_id=t2.id')
+                ->field('t1.*,t2.job_name')
+                ->page($this->page, $this->limit)
+                ->order('t1.sort', 'desc')
+                ->select();
+            if(!$result){
+                return $this->message(201, '暂无内容～');
+            }
+            $result = $this->team_name($result);
+            $count = adminModel::count('id');
+            return $this->message_list(200, '请求成功', $count, $result);
+        }catch (Exception $e){
+            echo $e->getMessage();
         }
-        $result = $this->team_name($result);
-        $count = adminModel::count('id');
-        return $this->message(200, '请求成功', [
-            'page' => $this->page,
-            'limit' => $this->limit,
-            'count' => $count,
-            'data' => $result
-        ]);
     }
 
     /**

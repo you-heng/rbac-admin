@@ -31,7 +31,7 @@ class RbacAuthTable extends Migrator
         $table = $this->table('auth', ['engine' => 'MyISAM', 'collation' => 'utf8_unicode_ci', 'comment' => '' ,'id' => 'id' ,'primary_key' => ['id']]);
         $table->addColumn('title', 'string', ['limit' => 20,'null' => false,'default' => null,'signed' => true,'comment' => '权限名',])
             ->addColumn('icon', 'string', ['limit' => 20,'null' => true,'signed' => true,'comment' => '字体图标',])
-            ->addColumn('path', 'string', ['limit' => 30,'null' => false,'default' => null,'signed' => true,'comment' => '地址',])
+            ->addColumn('path', 'string', ['limit' => 80,'null' => false,'default' => null,'signed' => true,'comment' => '地址',])
             ->addColumn('p_ids', 'json', ['limit' => 80,'null' => false,'default' => null,'signed' => true,'comment' => '父级id组',])
             ->addColumn('is_menu', 'boolean', ['null' => false,'default' => 1,'signed' => true,'comment' => '1-菜单 2-权限',])
             ->addColumn('sort', 'integer', ['null' => false,'default' => 1,'signed' => true,'comment' => '排序'])

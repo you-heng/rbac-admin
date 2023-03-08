@@ -3,12 +3,14 @@ declare (strict_types = 1);
 
 namespace app\admin\controller;
 
+use think\cache\driver\Redis;
 use think\captcha\facade\Captcha;
 use think\facade\Request;
 use app\admin\model\Admin as adminModel;
 use app\admin\model\Role as roleModel;
 use app\admin\model\Auth as authModel;
 use app\admin\model\Dict as dictModel;
+use app\admin\model\Record as recordModel;
 use Firebase\JWT\JWT;
 use think\facade\Cache;
 
@@ -20,12 +22,21 @@ class Index extends Base
      */
     public function index()
     {
-        echo 'index';
+        echo 12344;
+        //echo 'index';
         /*$avatar = json_encode([
             "name" => "Ft0mabo_PxdNGeUCi81qGPXcMnWe",
             "url" => "http://sys.anmixiu.com/ad7bc863acc50ad3b747c51c2f85b431.jpg"
         ]);
         dictModel::where('key', 'user_avatar')->update(['val' => $avatar]);*/
+        /*$data = authModel::field('id,title,icon,path,p_ids,is_menu,sort')->select()->toArray();
+        halt(json_encode($data));*/
+
+//        $uid = rand(10000,99999);
+//        $num = 10;
+//        $name = 'test';
+//        $redis = Cache::store('redis')->handler();
+//        $redis->lpush($name, $uid);
     }
 
     /**
@@ -67,7 +78,7 @@ class Index extends Base
             'exp' => time() + $config['jwt_time'], // 过期时间
             'nbf' => time(),                // 该时间前不接受处理该token
             'sub' => $config['jwt_sub'], // 面向用户
-            'jti' => md5(uniqid('JWT').time()), // 唯一标识
+            'jti' => md5($admin['username'] . '-' . uniqid('JWT').time()), // 唯一标识
         ];
         $jwt = JWT::encode($payload, $config['jwt_key'], 'HS256');
         $admin['avatar'] = json_decode($admin['avatar'], true);
@@ -202,5 +213,22 @@ class Index extends Base
         $new = encry($data['newPassword']);
         adminModel::where('username', $data['username'])->update(['password' => $new]);
         return $this->message(200, '密码修改成功，请重新登录');
+    }
+
+    public function echarts()
+    {
+        //$year = recordModel::whereYear('create_time')->select()->toArray();
+//        $year = recordModel::where(function ($query){
+//            $query->whereYear('create_time');
+//            $query->group('create_time');
+//        })->select()->toArray();
+        //$day = recordModel::whereMonth('create_time')->count();
+
+        /*$month = recordModel::where(function ($query){
+            $query->group('create_time')->whereMonth('create_time');
+        })->count();
+        halt($month);*/
+//        var_dump($day);
+        echo 111;
     }
 }

@@ -32,6 +32,7 @@ class RbacDictTable extends Migrator
         $table->addColumn('key', 'string', ['limit' => 20,'null' => false,'default' => null,'signed' => true,'comment' => '配置名'])
             ->addColumn('val', 'string', ['limit' => 255,'null' => false,'default' => null,'signed' => true,'comment' => '配置值'])
             ->addColumn('remark', 'string', ['limit' => 80,'null' => false,'default' => null,'signed' => true,'comment' => '备注'])
+            ->addColumn('is_type', 'boolean', ['null' => false,'default' => null,'signed' => true,'comment' => '类型 1-text 2-json 3-image'])
             ->addColumn('sort', 'integer', ['null' => false,'default' => 1,'signed' => true,'comment' => '排序'])
             ->addColumn('is_state', 'boolean', ['null' => false,'default' => 1,'signed' => true,'comment' => '状态 1-启用 2-禁用'])
             ->addColumn('create_time', 'timestamp', ['null' => false,'default' => 'CURRENT_TIMESTAMP','signed' => true,'comment' => '创建时间'])

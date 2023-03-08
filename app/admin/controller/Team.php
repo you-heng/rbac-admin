@@ -19,7 +19,7 @@ class Team extends Base
      */
     public function index()
     {
-        $result = teamModel::order('sort', 'desc')->select()->toArray();
+        $result = teamModel::order('sort', 'desc')->order('sort', 'desc')->select()->toArray();
         if(!$result){
             return $this->message(201, '暂无内容');
         }
