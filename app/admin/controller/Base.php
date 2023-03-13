@@ -3,8 +3,10 @@ declare (strict_types = 1);
 
 namespace app\admin\controller;
 
+use think\facade\Cache;
 use think\facade\Config;
 use think\facade\Request;
+use app\admin\model\BlackList as BlackListModel;
 use think\Response;
 
 abstract class Base
@@ -66,9 +68,20 @@ abstract class Base
      * @return void
      * 写日志
      */
-    public function write_logs()
+    public function write_logs($tag, $content)
     {
-
+//        $uniquid = Request::header('uniquid');
+        $uniquid = 'be2e67341bb4177cdfb39839c8716243';
+        $user = Cache::store('redis')->get($uniquid);
+        $user = json_decode($user, true);
+        $data = [
+            'username' => $user['username'],
+            'tag' => $tag,
+            'path' => Request::action(),
+            'content' => $content,
+            'ip' => Request::ip()
+        ];
+        BlackListModel::create($data);
     }
 
     /**

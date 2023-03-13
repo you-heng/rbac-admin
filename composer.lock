@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ca77b8df97620aeddaa70882f33e4d72",
+    "content-hash": "2cba6da3f86269ea7bf6c03b6637859b",
     "packages": [
         {
             "name": "ezyang/htmlpurifier",
@@ -2044,6 +2044,53 @@
                 "source": "https://github.com/top-think/think-migration/tree/v3.0.3"
             },
             "time": "2020-12-07T05:54:22+00:00"
+        },
+        {
+            "name": "topthink/think-mongo",
+            "version": "v3.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/top-think/think-mongo.git",
+                "reference": "e19d989ae093429c179bed0265fb4c55970bd18b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/top-think/think-mongo/zipball/e19d989ae093429c179bed0265fb4c55970bd18b",
+                "reference": "e19d989ae093429c179bed0265fb4c55970bd18b",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "topthink/framework": "^6.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [],
+                "psr-4": {
+                    "think\\db\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "liu21st",
+                    "email": "liu21st@gmail.com"
+                }
+            ],
+            "description": "mongodb driver for thinkphp6.0",
+            "support": {
+                "issues": "https://github.com/top-think/think-mongo/issues",
+                "source": "https://github.com/top-think/think-mongo/tree/3.0"
+            },
+            "time": "2019-06-19T10:52:45+00:00"
         },
         {
             "name": "topthink/think-multi-app",

@@ -3,14 +3,13 @@ declare (strict_types = 1);
 
 namespace app\admin\controller;
 
-use think\cache\driver\Redis;
 use think\captcha\facade\Captcha;
+use think\facade\Db;
 use think\facade\Request;
 use app\admin\model\Admin as adminModel;
 use app\admin\model\Role as roleModel;
 use app\admin\model\Auth as authModel;
 use app\admin\model\Dict as dictModel;
-use app\admin\model\Record as recordModel;
 use Firebase\JWT\JWT;
 use think\facade\Cache;
 
@@ -22,7 +21,16 @@ class Index extends Base
      */
     public function index()
     {
-        echo 12344;
+        //$table = \think\Db::connect('mongo')->table('test')->select();
+        /*$table = Db::connect('mongo')->table('test')->select();
+        halt($table);*/
+
+
+
+        /*Db::connect('mongo')->table('test')->insert([
+            'id' => 1,
+            'name' => 'zhangsan'
+        ]);*/
         //echo 'index';
         /*$avatar = json_encode([
             "name" => "Ft0mabo_PxdNGeUCi81qGPXcMnWe",

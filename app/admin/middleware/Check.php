@@ -5,6 +5,7 @@ namespace app\admin\middleware;
 
 use think\facade\Cache;
 use app\admin\model\Dict as dictModel;
+use app\admin\model\BlackList as BlackListModel;
 use think\facade\Request;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
@@ -22,7 +23,6 @@ class Check
     {
         try {
             $url = Request::baseUrl();
-
             // 接口白名单
             $config = dictModel::where('key', 'in', ['white_list', 'jwt_key'])->column('key,val');
             $config = array_column($config, 'val', 'key');
@@ -33,7 +33,23 @@ class Check
                 }
             }
 
-            // 判断是否登陆
+            // ip防火墙
+            $ip = Request::ip();
+            $ipList = BlackListModel::where('is_state', 1)->field('ip,time,is_type')->select();
+            $time = date('Y-m-d H:i:s', time());
+            foreach($ipList as $v){
+                if($v['is_type'] == 1){
+                    if($ip == $v['ip']){
+                        return json(['code' => 405, 'msg' => '您已经被系统拉黑，请联系管理员！']);
+                    }
+                }else if($v['is_type'] == 2){
+                    if($time < $v['time'] && $ip == $v['ip']){
+                        return json(['code' => 405, 'msg' => '您已经被系统拉黑，请联系管理员！']);
+                    }
+                }
+            }
+
+            // token验证
             $uniquid = Request::header('uniquid');
             $token = Request::header('token');
             if(empty($uniquid) || empty($token)){
@@ -50,7 +66,7 @@ class Check
                 return json(['code' => 402, 'msg' => 'token失效，重新登录']);
             }
 
-            // 判断管理员权限
+            // 权限验证
             if($user['role']['auth'] == '*'){
                 return $next($request);
             }
@@ -61,7 +77,7 @@ class Check
                 }
             }
         }catch (\Exception $e){
-            echo $e->getMessage();die;
+            return json(['code' => 402, 'msg' => $e->getMessage()]);
         }
         return $next($request);
     }

@@ -842,8 +842,8 @@ class Auth extends Seeder
                 "sort" =>1
             ],
             [
-                "title" =>"黑名单ip",
-                "icon" =>"icon-shujuzidian",
+                "title" =>"ip防火墙",
+                "icon" =>"icon-ip",
                 "path" =>"/config/black-list",
                 "p_ids" =>json_encode([2]),
                 "is_menu" =>1,
