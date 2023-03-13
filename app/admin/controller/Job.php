@@ -5,8 +5,8 @@ namespace app\admin\controller;
 
 use app\admin\model\Job as jobModel;
 use think\exception\ValidateException;
+use think\facade\Cache;
 use think\facade\Request;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use app\admin\validate\Job as jobValidate;
 
 class Job extends Base
@@ -102,46 +102,58 @@ class Job extends Base
     }
 
     /**
-     * 批量导出
      * @return void
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
+     * 批量导出
      */
     public function batch_down()
     {
         $ids = Request::post('ids');
         $data = jobModel::where('id', 'in',$ids)->select()->toArray();
-        //实例化spreadsheet对象
-        $spreadsheet = new Spreadsheet();
-        //获取活动工作簿
-        $sheet = $spreadsheet->getActiveSheet();
-        //设置单元格表头
-        $sheet->setCellValue('A1', 'id');
-        $sheet->setCellValue('B1', '岗位名称');
-        $sheet->setCellValue('C1', '排序');
-        $sheet->setCellValue('D1', '创建时间');
-        $sheet->setCellValue('E1', '修改时间');
-        $i=2;
-        foreach($data as $v){
-            $sheet->SetCellValueByColumnAndRow('1',$i,$v['id']);
-            $sheet->SetCellValueByColumnAndRow('2',$i,$v['job_name']);
-            $sheet->SetCellValueByColumnAndRow('3',$i,$v['sort']);
-            $sheet->SetCellValueByColumnAndRow('4',$i,$v['create_time']);
-            $sheet->SetCellValueByColumnAndRow('5',$i,$v['update_time']);
-            $i++;
-        }
-        $common = new Common();
-        $common->execl($spreadsheet);
+        $filename = '职位管理-' . date('YmdHis');
+        $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
+        $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
+        Cache::store('redis')->set('excel', json_encode([
+            'filename' => $filename,
+            'head' => $head,
+            'value' => $value,
+            'data' => $data
+        ]));
+        /*Cache::store('memcached')->set('excel', json_encode([
+            'filename' => $filename,
+            'head' => $head,
+            'value' => $value,
+            'data' => $data
+        ]));*/
     }
 
     /**
-     * 全部导出
      * @return void
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 全部导出
      */
     public function down_all()
     {
-
+        $data = jobModel::select();
+        $filename = '职位管理-' . date('YmdHis');
+        $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
+        $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
+        Cache::store('redis')->set('excel', json_encode([
+            'filename' => $filename,
+            'head' => $head,
+            'value' => $value,
+            'data' => $data
+        ]));
+        /*Cache::store('memcached')->set('excel', json_encode([
+            'filename' => $filename,
+            'head' => $head,
+            'value' => $value,
+            'data' => $data
+        ]));*/
     }
 
     /**

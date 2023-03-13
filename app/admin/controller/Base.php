@@ -72,7 +72,8 @@ abstract class Base
     {
 //        $uniquid = Request::header('uniquid');
         $uniquid = 'be2e67341bb4177cdfb39839c8716243';
-        $user = Cache::store('redis')->get($uniquid);
+//        $user = Cache::store('memcached')->get($uniquid);
+         $user = Cache::store('redis')->get($uniquid);
         $user = json_decode($user, true);
         $data = [
             'username' => $user['username'],

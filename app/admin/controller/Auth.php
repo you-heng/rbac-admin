@@ -119,7 +119,8 @@ class Auth extends Base
     public function menu()
     {
         $uniquid = Request::header('uniquid');
-        $user = Cache::store('redis')->get($uniquid);
+//        $user = Cache::store('memcached')->get($uniquid);
+         $user = Cache::store('redis')->get($uniquid);
         $user = json_decode($user, true);
         return $this->message(200, '成功', $user['role']['menu']);
     }

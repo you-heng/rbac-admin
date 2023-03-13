@@ -55,7 +55,8 @@ class Check
             if(empty($uniquid) || empty($token)){
                 return json(['code' => 403, 'msg' => '请先登录!']);
             }
-            $user = Cache::store('redis')->get($uniquid);
+//            $user = Cache::store('memcached')->get($uniquid);
+             $user = Cache::store('redis')->get($uniquid);
             $user = json_decode($user, true);
             $decode = JWT::decode($token, new Key($config['jwt_key'], 'HS256'));
             $time = time();

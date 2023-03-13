@@ -21,12 +21,25 @@ class Index extends Base
      */
     public function index()
     {
+        $data = [
+            [
+                'id' => 1,
+                'name' => 'zhangsan'
+            ],
+            [
+                'id' => 2,
+                'name' => 'lisi'
+            ]
+        ];
+        $filename = date('YmdHis');
+        $head = ['ID', '姓名'];
+        $value = ['id', 'name'];
+        $common = new Common();
+        $common->execl($filename, $head, $value, $data);
+
         //$table = \think\Db::connect('mongo')->table('test')->select();
         /*$table = Db::connect('mongo')->table('test')->select();
         halt($table);*/
-
-
-
         /*Db::connect('mongo')->table('test')->insert([
             'id' => 1,
             'name' => 'zhangsan'
@@ -100,7 +113,8 @@ class Index extends Base
             'phone' => $admin['phone'],
             'avatar' => $admin['avatar']
         ];
-        Cache::store('redis')->set($username['uniquid'], json_encode($username));
+//        Cache::store('memcached')->set($username['uniquid'], json_encode($username));
+         Cache::store('redis')->set($username['uniquid'], json_encode($username));
         return $this->message(200, '登录成功', $username);
     }
 
@@ -147,7 +161,8 @@ class Index extends Base
     public function logout()
     {
         $uniquid = Request::header('uniquid');
-        Cache::store('redis')->delete($uniquid);
+//        Cache::store('memcached')->delete($uniquid);
+         Cache::store('redis')->delete($uniquid);
         return $this->message(200, '退出登录');
     }
 
@@ -191,12 +206,14 @@ class Index extends Base
         $admin = adminModel::where('username', $data['username'])->field('username,email,phone,avatar')->find()->toArray();
         $admin['avatar'] = json_decode($admin['avatar'], true);
         $uniquid = Request::header('uniquid');
-        $user = Cache::store('redis')->get($uniquid);
+         $user = Cache::store('redis')->get($uniquid);
+//        $user = Cache::store('memcached')->get($uniquid);
         $user = json_decode($user, true);
         $user['email'] = $admin['email'];
         $user['phone'] = $admin['phone'];
         $user['avatar'] = $admin['avatar'];
-        Cache::store('redis')->set($uniquid, json_encode($user));
+//        Cache::store('memcached')->set($uniquid, json_encode($user));
+         Cache::store('redis')->set($uniquid, json_encode($user));
         return $this->message(200, '更新成功', $user);
     }
 
@@ -221,6 +238,20 @@ class Index extends Base
         $new = encry($data['newPassword']);
         adminModel::where('username', $data['username'])->update(['password' => $new]);
         return $this->message(200, '密码修改成功，请重新登录');
+    }
+
+    /**
+     * @return void
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 导出execl
+     */
+    public function excel()
+    {
+        $execl = Cache::store('redis')->get('excel');
+//        $execl = Cache::store('memcached')->get('execl');
+        $execl = json_decode($execl, true);
+        $common = new Common();
+        $common->excel($execl['filename'], $execl['head'], $execl['value'], $execl['data']);
     }
 
     public function echarts()

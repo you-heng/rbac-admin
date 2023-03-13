@@ -282,4 +282,11 @@ class Admin extends Base
         }
         return $this->message(200, $msg . '成功');
     }
+
+
+    public function batch_down()
+    {
+        $ids = Request::post();
+        halt($ids);
+    }
 }
