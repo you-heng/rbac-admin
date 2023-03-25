@@ -4,105 +4,109 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Job as jobModel;
-use think\exception\ValidateException;
 use think\facade\Cache;
 use think\facade\Request;
-use app\admin\validate\Job as jobValidate;
 
 class Job extends Base
 {
+    protected $jobModel;
+
+    public function __construct()
+    {
+        $this->jobModel = new jobModel();
+    }
+
     /**
+     * @return \think\Response|\think\response\Json
      * 列表
-     * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
      */
     public function index()
     {
-        $result = jobModel::page($this->page, $this->limit)->order('sort', 'desc')->select();
-        if(!$result){
-            return $this->message(201, '暂无内容~');
+        if(Request::isGet()){
+            return $this->jobModel->get_job_list($this->limit);
         }
-        $count = jobModel::count('id');
-        return $this->message_list(200, '请求成功', $count, $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 添加
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 添加
      */
     public function create()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = jobModel::create($data);
-        if(!$result){
-            return $this->message(201, '添加失败');
+        if (Request::isPost()){
+            $data = Request::post();
+            $result = $this->jobModel->create_job($data);
+            $this->write_logs(2, '添加职位' . is_true($result) . 'id=' . $result);
+            if($result){
+                return $this->message('添加成功');
+            }
+            return $this->message('添加失败', 201);
         }
-        return $this->message(200, '添加成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 编辑
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 编辑
      */
     public function update()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = jobModel::update($data);
-        if(!$result){
-            return $this->message(201, '修改失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->jobModel->update_job($data);
+            $this->write_logs(3, '编辑职位' . is_true($result) . 'id=' . $data['id']);
+            if($result->isEmpty()){
+                return $this->message('修改失败', 201);
+            }
+            return $this->message('修改成功');
         }
-        return $this->message(200, '修改成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 验证
-     * @param $data
-     * @return \think\Response|void
-     */
-    public function check($data)
-    {
-        try {
-            validate(jobValidate::class)->scene('create')->check($data);
-        }catch (ValidateException $e){
-            $msg = $e->getError();
-            return $this->message(201, $msg);
-        }
-    }
-
-    /**
-     * 删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 删除
      */
     public function remove()
     {
-        $id = Request::post('id');
-        $result = jobModel::destroy($id);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $id = Request::post('id');
+            $result = $this->jobModel->remove_job($id);
+            $this->write_logs(4, '删除职位成功id=' . $id);
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除失败', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 批量删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 批量删除
      */
     public function batch_remove()
     {
-        $ids = Request::post('ids');
-        $result = jobModel::destroy($ids);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $result = $this->jobModel->remove_job($ids);
+            $this->write_logs(4, '批量删除职位' . is_true($result) . '-id=' . implode(',', $ids));
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除失败', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * @return void
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
@@ -110,17 +114,21 @@ class Job extends Base
      */
     public function batch_down()
     {
-        $ids = Request::post('ids');
-        $data = jobModel::where('id', 'in',$ids)->select()->toArray();
-        $filename = '职位管理-' . date('YmdHis');
-        $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
-        $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
-        Cache::store('redis')->set('excel', json_encode([
-            'filename' => $filename,
-            'head' => $head,
-            'value' => $value,
-            'data' => $data
-        ]));
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $result = $this->jobModel->down(1, $ids);
+            $filename = '职位管理-' . date('YmdHis');
+            $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
+            $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
+            Cache::store('redis')->set('excel', json_encode([
+                'filename' => $filename,
+                'head' => $head,
+                'value' => $value,
+                'data' => $result
+            ]));
+        }
+        return $this->message('请求方式错误', 203);
+
         /*Cache::store('memcached')->set('excel', json_encode([
             'filename' => $filename,
             'head' => $head,
@@ -130,7 +138,8 @@ class Job extends Base
     }
 
     /**
-     * @return void
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
@@ -138,16 +147,20 @@ class Job extends Base
      */
     public function down_all()
     {
-        $data = jobModel::select();
-        $filename = '职位管理-' . date('YmdHis');
-        $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
-        $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
-        Cache::store('redis')->set('excel', json_encode([
-            'filename' => $filename,
-            'head' => $head,
-            'value' => $value,
-            'data' => $data
-        ]));
+        if(Request::isPost()){
+            $result = $this->jobModel->down(2);
+            $filename = '职位管理-' . date('YmdHis');
+            $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
+            $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
+            Cache::store('redis')->set('excel', json_encode([
+                'filename' => $filename,
+                'head' => $head,
+                'value' => $value,
+                'data' => $result
+            ]));
+        }
+        return $this->message('请求方式错误', 203);
+
         /*Cache::store('memcached')->set('excel', json_encode([
             'filename' => $filename,
             'head' => $head,
@@ -157,32 +170,39 @@ class Job extends Base
     }
 
     /**
-     * 清空
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 清空
      */
     public function remove_all()
     {
-        $result = jobModel::where("1=1")->delete();
-        if(!$result){
-            return $this->message(201, '清空失败');
+        if(Request::isPost()){
+            $result = $this->jobModel->remove_job_all();
+            $this->write_logs(4, '清空职位表' . is_true($result));
+            if($result){
+                return $this->message('清空成功');
+            }
+            return $this->message('清空失败', 201);
         }
-        return $this->message(200, '清空成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 搜索
      * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 搜索
      */
     public function search()
     {
-        $data = Request::post();
-        $result = jobModel::withSearch([$data['select']], [$data['select'] => $data['search']])->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容~');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->jobModel->search($data);
+            $this->write_logs(5, '搜索'. $data['select'] . '=' . $data['search'] . is_true($result));
+            if($result->isEmpty()){
+                return $this->message('暂无内容~', 201);
+            }
+            return $this->message('请求成功', 200, $result);
         }
-        return $this->message(200, '请求成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 }

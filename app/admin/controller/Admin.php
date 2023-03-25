@@ -6,287 +6,274 @@ namespace app\admin\controller;
 use app\admin\model\Admin as adminModel;
 use app\admin\model\Role as roleModel;
 use app\admin\model\Job as jobModel;
-use app\admin\model\Team as teamModel;
-use app\admin\model\Dict as dictModel;
-use think\Exception;
-use think\exception\ValidateException;
-use app\admin\validate\Admin as adminValidate;
+use think\facade\Cache;
 use think\facade\Request;
 
 class Admin extends Base
 {
+    protected $adminModel;
+
+    public function __construct()
+    {
+        $this->adminModel = new adminModel();
+    }
+
     /**
+     * @return \think\Response|\think\response\Json
      * 列表
-     * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
      */
     public function index()
     {
-        try {
-            $result = adminModel::alias('t1')
-                ->leftJoin('job t2', 't1.job_id=t2.id')
-                ->field('t1.*,t2.job_name')
-                ->page($this->page, $this->limit)
-                ->order('t1.sort', 'desc')
-                ->select();
-            if(!$result){
-                return $this->message(201, '暂无内容～');
-            }
-            $result = $this->team_name($result);
-            $count = adminModel::count('id');
-            return $this->message_list(200, '请求成功', $count, $result);
-        }catch (Exception $e){
-            echo $e->getMessage();
+        if(Request::isGet()){
+            return $this->adminModel->get_admin_list($this->limit);
         }
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 根据部门获取用户
-     * @return \think\Response
+     * @return \think\Response|\think\response\Json
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
+     * 根据部门获取用户
      */
     public function team()
     {
-        $team_id = Request::post('team_id');
-        $result = adminModel::field('id,team_ids')->select()->toArray();
-        $list = [];
-        foreach($result as $v){
-            if(in_array($team_id, $v['team_ids'])){
-                $list[] = $v['id'];
-            }
+        if(Request::isPost()){
+            $team_id = Request::post('team_id');
+            return $this->adminModel->team_get_admin($team_id);
         }
-        if(empty($list)){
-            return $this->message(201, '暂无内容~');
-        }
-        $data = adminModel::where('id', 'in', $list)->select()->toArray();
-        $result = $this->team_name($data);
-        return $this->message(200, '成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 获取团队名称等信息
-     * @param $result
-     * @return array
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     */
-    public function team_name($result)
-    {
-        $team = teamModel::field('id,team_name')->select()->toArray();
-        foreach($result as $k => $v){
-            $result[$k]['role_name'] = implode(',', $v['role_ids']);
-            $temp = '';
-            foreach($v['team_ids'] as $val){
-                foreach($team as $value){
-                    if($value['id'] == $val){
-                        $temp .= $value['team_name'] . '-';
-                    }
-                }
-            }
-            $temp = rtrim($temp, '-');
-            $result[$k]['team_name'] = $temp;
-            $result[$k]['job_id'] = [$v['job_id']];
-        }
-        return $result;
-    }
-
-    /**
-     * 角色列表
      * @return \think\Response
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
+     * 角色列表
      */
     public function role()
     {
-        $result = roleModel::select();
-        if(!$result){
-            return $this->message(201, '暂无内容~');
+        if(Request::isGet()){
+            $result = roleModel::select();
+            if($result->isEmpty()){
+                return $this->message('暂无内容~', 201);
+            }
+            return $this->message('请求成功', 200, $result);
         }
-        return $this->message(200, '请求成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 职位列表
-     * @return \think\Response
-     */
-    public function job()
-    {
-        $result = jobModel::select();
-        if(!$result){
-            return $this->message(201, '暂无内容~');
-        }
-        return $this->message(200, '请求成功', $result);
-    }
-
-    /**
-     * 添加
-     * @return \think\Response
-     */
-    public function create()
-    {
-        $data = Request::post();
-        $this->check($data);
-        $config = dictModel::where('is_state' , 1)->where('key', 'in', ['user_pass', 'user_avatar', 'user_phone', 'user_email'])->field('key,val')->select()->toArray();
-        $config = array_column($config, 'val', 'key');
-        $data['password'] = encry($config['user_pass']);
-        $data['avatar'] = $config['user_avatar'];
-        $data['phone'] = $config['user_phone'];
-        $data['email'] = $config['user_email'];
-        $data['job_id'] = $data['job_id'][0];
-        $result = adminModel::create($data);
-        if(!$result){
-            return $this->message(201, '添加失败');
-        }
-        return $this->message(200, '添加成功');
-    }
-
-    /**
-     * 编辑
-     * @return \think\Response
-     */
-    public function update()
-    {
-        $data = Request::post();
-        $this->check($data);
-        unset($data['password']);
-        $data['job_id'] = $data['job_id'][0];
-        $result = adminModel::update($data);
-        if(!$result){
-            return $this->message(201, '修改失败');
-        }
-        return $this->message(200, '修改成功');
-    }
-
-    /**
-     * 验证
-     * @param $data
-     * @return \think\Response|void
-     */
-    public function check($data)
-    {
-        try {
-            validate(adminValidate::class)->scene('create')->check($data);
-        }catch (ValidateException $e){
-            $msg = $e->getError();
-            return $this->message(201, $msg);
-        }
-    }
-
-    /**
-     * 删除
-     * @return \think\Response
-     */
-    public function remove()
-    {
-        $id = Request::post('id');
-        if($id == 1){
-            return $this->message(201, 'admin 管理员不能被删除');
-        }
-        $result = adminModel::destroy($id);
-        if(!$result){
-            return $this->message(201, '删除错误');
-        }
-        return $this->message(200, '删除成功');
-    }
-
-    /**
-     * 批量删除
-     * @return \think\Response
-     */
-    public function batch_remove()
-    {
-        $ids = Request::post('ids');
-        $result = adminModel::destroy($ids);
-        if(!$result){
-            return $this->message(203, '删除失败');
-        }
-        return $this->message(200, '删除成功');
-    }
-
-    /**
-     * 清空
-     * @return \think\Response
-     */
-    public function remove_all()
-    {
-        $result = adminModel::where('id', '<>', 1)->delete();
-        if(!$result){
-            return $this->message(201, '清空失败');
-        }
-        return $this->message(200, '清空成功');
-    }
-
-    /**
-     * 搜索
      * @return \think\Response
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
+     * 职位列表
+     */
+    public function job()
+    {
+        if(Request::isGet()){
+            $result = jobModel::select();
+            if($result->isEmpty()){
+                return $this->message('暂无内容~', 201);
+            }
+            return $this->message('请求成功', 200, $result);
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 添加
+     */
+    public function create()
+    {
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->adminModel->create_admin($data);
+            $this->write_logs(2, '添加管理员' . is_true($result) . '-id=' . $result);
+            if($result){
+                return $this->message('添加成功');
+            }
+            return $this->message('添加失败', 201);
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 编辑
+     */
+    public function update()
+    {
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->adminModel->update_admin($data);
+            $this->write_logs(3, '修改管理员' . is_true($result) . '-id=' . $data['id']);
+            if($result){
+                return $this->message('修改成功');
+            }
+            return $this->message('修改失败', 201);
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 删除
+     */
+    public function remove()
+    {
+        if(Request::isPost()){
+            $id = Request::post('id');
+            $result = $this->adminModel->remove_admin($id);
+            $this->write_logs(4, '删除管理员' . is_true($result) . '-id=' . $id);
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除错误', 201);
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 批量删除
+     */
+    public function batch_remove()
+    {
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $result = $this->adminModel->remove_admin($ids);
+            $this->write_logs(4, '批量删除管理员' . is_true($result) . '-id=' . implode(',', $ids));
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除错误', 201);
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 清空
+     */
+    public function remove_all()
+    {
+        if(Request::isPost()){
+            $result = $this->adminModel->remove_admin_all();
+            $this->write_logs(4, '清空管理员表' . is_true($result));
+            if($result){
+                return $this->message('清空成功');
+            }
+            return $this->message('清空失败', 201);
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 搜索
      */
     public function search()
     {
-        $data = Request::post();
-        $result = adminModel::withSearch([$data['select']], [$data['select'] => $data['search']])
-            ->alias('t1')
-            ->leftJoin('job t2', 't1.job_id=t2.id')
-            ->field('t1.*,t2.job_name')
-            ->select()
-            ->toArray();
-        if(!$result){
-            return $this->message(203, '请求失败', []);
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->adminModel->search($data);
+            $this->write_logs(5, '搜索'. $data['select'] . '=' . $data['search'] . is_true($result));
+            return $this->message('请求成功', 200, $result);
         }
-        $team = teamModel::field('id,team_name')->select()->toArray();
-        foreach($result as $k => $v){
-            $result[$k]['role_name'] = implode(',', $v['role_ids']);
-            $temp = '';
-            foreach($v['team_ids'] as $val){
-                foreach($team as $value){
-                    if($value['id'] == $val){
-                        $temp .= $value['team_name'] . '-';
-                    }
-                }
-            }
-            $temp = rtrim($temp, '-');
-            $result[$k]['team_name'] = $temp;
-            $result[$k]['job_id'] = [$v['job_id']];
-        }
-        return $this->message(200, '请求成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 
 
     /**
-     * 状态
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 状态
      */
     public function is_state()
     {
-        $data = Request::post();
-        $is_state = 1;
-        $msg = '启用';
-        if($data['is_state'] == 1){
-            $is_state = 2;
-            $msg = '禁用';
+        if(Request::isPost()){
+            $data = Request::post();
+            $is_state = 1;
+            $msg = '启用';
+            if($data['is_state'] == 1){
+                $is_state = 2;
+                $msg = '禁用';
+            }
+            $result = $this->adminModel->is_state($data['id'], $is_state);
+            $this->write_logs(7,  '管理员id=' . $data['id'] . $msg . is_true($result));
+            if($result){
+                return $this->message($msg . '失败', 201);
+            }
+            return $this->message($msg . '成功');
         }
-        $result = adminModel::update([
-            'id' => $data['id'],
-            'is_state' => $is_state
-        ]);
-        if(!$result){
-            return $this->message(203, $msg . '失败');
-        }
-        return $this->message(200, $msg . '成功');
+        return $this->message('请求方式错误', 203);
     }
 
 
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 批量导出
+     */
     public function batch_down()
     {
-        $ids = Request::post();
-        halt($ids);
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $result = $this->adminModel->down(1, $ids);
+            $this->write_logs(6, '批量导出管理员列表' . is_true($result));
+            $filename = '管理员列表-' . date('YmdHis');
+            $head = ['ID', ''];
+            $value = [];
+            Cache::store('memcached')->set('excel', json_encode([
+                'filename' => $filename,
+                'head' => $head,
+                'value' => $value,
+                'data' => $result,
+            ]));
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 全部导出
+     */
+    public function down_all()
+    {
+        if(Request::isPost()){
+            $result = $this->adminModel->down(2);
+            $this->write_logs(6, '导出全部管理员列表' . is_true($result));
+            $filename = '管理员列表-' . date('YmdHis');
+            $head = ['ID', ''];
+            $value = [];
+            Cache::store('memcached')->set('excel', json_encode([
+                'filename' => $filename,
+                'head' => $head,
+                'value' => $value,
+                'data' => $result,
+            ]));
+        }
+        return $this->message('请求方式错误', 203);
     }
 }

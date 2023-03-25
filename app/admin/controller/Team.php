@@ -4,119 +4,128 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Team as teamModel;
-use think\exception\ValidateException;
 use think\facade\Request;
-use app\admin\validate\Team as teamValidate;
 
 class Team extends Base
 {
+    protected $teamModel;
+
+    public function __construct()
+    {
+        $this->teamModel = new teamModel();
+    }
+
     /**
-     * 列表
      * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * 列表
      */
     public function index()
     {
-        $result = teamModel::order('sort', 'desc')->order('sort', 'desc')->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容');
+        if(Request::isGet() || Request::isPost()){
+            $result = $this->teamModel->get_team_list();
+            if($result){
+                return $this->message('请求成功', 200, $result);
+            }
+            return $this->message('暂无内容~', 201);
         }
-        $data = get_p_name($result, '顶级部门', 'team_name');
-        $result = tree_data($data);
-        return $this->message(200, '请求成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 添加
      * @return \think\Response
+     * 添加
      */
     public function create()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = teamModel::create($data);
-        if(!$result){
-            return $this->message(201, '添加失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->teamModel->create_team($data);
+            $this->write_logs(2, '添加团队' . is_true($result) . '-id=' . $result);
+            if($result){
+                return $this->message('添加成功');
+            }
+            return $this->message('添加失败', 201);
         }
-        return $this->message(200, '添加成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 编辑
      * @return \think\Response
+     * 编辑
      */
     public function update()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = teamModel::update($data);
-        if(!$result){
-            return $this->message(201, '修改失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->teamModel->update_team($data);
+            $this->write_logs(3, '修改团队' . is_true($result) . '-id=' . $result);
+            if($result){
+                return $this->message('修改成功');
+            }
+            return $this->message('修改失败', 201);
         }
-        return $this->message(200, '修改成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 验证
-     * @param $data
-     * @return \think\Response|void
-     */
-    public function check($data)
-    {
-        try {
-            validate(teamValidate::class)->scene('create')->check($data);
-        }catch (ValidateException $e){
-            $msg = $e->getError();
-            return $this->message(201, $msg);
-        }
-    }
-
-    /**
-     * 删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 删除
      */
     public function remove()
     {
-        $id = Request::post('id');
-        $result = teamModel::destroy($id);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $id = Request::post('id');
+            $result = $this->teamModel->remove_team($id);
+            $this->write_logs(4, '删除团队' . is_true($result) . '-id=' . $result);
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除错误', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 清空
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 清空
      */
     public function remove_all()
     {
-        $result = teamModel::where('1=1')->delete();
-        if(!$result){
-            return $this->message(201, '清空失败');
+        if(Request::isPost()){
+            $result = $this->teamModel->remove_team_all();
+            $this->write_logs(4, '清空团队表' . is_true($result));
+            if($result){
+                return $this->message('清空成功');
+            }
+            return $this->message('清空失败', 201);
         }
-        return $this->message(200,'清空成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 状态
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 状态
      */
     public function is_state()
     {
-        $data = Request::post();
-        $is_state = 1;
-        $msg = '启用';
-        if($data['is_state'] == 1){
-            $is_state = 2;
-            $msg = '禁用';
+        if(Request::isPost()){
+            $data = Request::post();
+            $is_state = 1;
+            $msg = '启用';
+            if($data['is_state'] == 1){
+                $is_state = 2;
+                $msg = '禁用';
+            }
+            $result = $this->teamModel->is_state($data['id'], $is_state);
+            $this->write_logs(7,  '团队id=' . $data['id'] . $msg . is_true($result));
+            if($result){
+                return $this->message($msg . '失败', 201);
+            }
+            return $this->message($msg . '成功');
         }
-        $result = teamModel::where('id', $data['id'])->update(['is_state' => $is_state]);
-        if(!$result){
-            return $this->message(201, $msg . '失败');
-        }
-        return $this->message(200, $msg . '成功');
+        return $this->message('请求方式错误', 203);
     }
 }

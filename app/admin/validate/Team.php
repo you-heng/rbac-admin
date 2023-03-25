@@ -34,6 +34,7 @@ class Team extends Validate
      * @var array[]
      */
     protected $scene = [
-        'create' => ['team_name', 'p_ids']
+        'create' => ['team_name', 'p_ids'],
+        'update' => ['team_name', 'p_ids'],
     ];
 }

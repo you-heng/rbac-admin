@@ -4,12 +4,18 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Dict as dictModel;
-use think\exception\ValidateException;
+use think\facade\Cache;
 use think\facade\Request;
-use app\admin\validate\Dict as dictValidate;
 
 class Dict extends Base
 {
+    protected $dictModel;
+
+    public function __construct()
+    {
+        $this->dictModel = new dictModel();
+    }
+
     /**
      * 列表
      * @return \think\Response
@@ -19,139 +25,197 @@ class Dict extends Base
      */
     public function index()
     {
-        $result = dictModel::page($this->page, $this->limit)->order('sort', 'desc')->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容～');
+        if(Request::isGet()){
+            return $this->dictModel->get_dict_list($this->limit);
         }
-        foreach($result as $k => $v){
-            if($v['is_type'] == 2 || $v['is_type'] == 3){
-                $result[$k]['val'] = json_decode($v['val'], true);
-            }
-        }
-        $count = dictModel::count('id');
-        return $this->message_list(200, '请求成功', $count, $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 添加
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 添加
      */
     public function create()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = dictModel::create($data);
-        if(!$result){
-            return $this->message(201, '添加失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->dictModel->create_dict($data);
+            $this->write_logs(2, '添加字典' . is_true($result) . '-id=' . $result);
+            if($result){
+                return $this->message('添加成功');
+            }
+            return $this->message('添加失败', 201);
         }
-        return $this->message(200, '添加成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 编辑
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 编辑
      */
     public function update()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = dictModel::update($data);
-        if(!$result){
-            return $this->message(201, '修改失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->dictModel->update_dict($data);
+            $this->write_logs(3, '修改字典' . is_true($result) . '-id=' . $data['id']);
+            if($result){
+                return $this->message('修改成功');
+            }
+            return $this->message('修改失败', 201);
         }
-        return $this->message(200, '修改成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 验证
-     * @param $data
-     * @return \think\Response|void
-     */
-    public function check($data)
-    {
-        try {
-            validate(dictValidate::class)->scene('create')->check($data);
-        }catch (ValidateException $e){
-            $msg = $e->getError();
-            return $this->message(201, $msg);
-        }
-    }
-
-    /**
-     * 删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 删除
      */
     public function remove()
     {
-        $id = Request::post('id');
-        $result = dictModel::destroy($id);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $id = Request::post('id');
+            $result = $this->dictModel->remove_dict($id);
+            $this->write_logs(4, '删除字典' . is_true($result) . '-id=' . $id);
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除失败', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 批量删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 批量删除
      */
     public function batch_remove()
     {
-        $ids = Request::post('ids');
-        $result = dictModel::destroy($ids);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $result = $this->dictModel->remove_dict($ids);
+            $this->write_logs(4, '批量删除字典' . is_true($result) . '-id=' . implode(',', $ids));
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除失败', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 搜索
      * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 搜索
      */
     public function search()
     {
-        $data = Request::post();
-        $result = dictModel::withSearch([$data['select']], [$data['select'] => $data['search']])->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容~');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->dictModel->search($data);
+            $this->write_logs(5, '搜索'. $data['select'] . '=' . $data['search'] . is_true($result));
+            return $this->message('请求成功', 200, $result);
         }
-        return $this->message(200, '请求成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 清空
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 清空
      */
     public function remove_all()
     {
-        $result = dictModel::where('1=1')->delete();
-        if(!$result){
-            return $this->message(201, '清空失败');
+        if(Request::isPost()){
+            $result = $this->dictModel->remove_dict_all();
+            $this->write_logs(4, '清空字典表' . is_true($result));
+            if($result){
+                return $this->message('清空成功');
+            }
+            return $this->message('清空失败', 201);
         }
-        return $this->message(200, '清空成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 状态
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 状态
      */
     public function is_state()
     {
-        $data = Request::post();
-        $is_state = 1;
-        $msg = '启用';
-        if($data['is_state'] == 1){
-            $is_state = 2;
-            $msg = '禁用';
+        if(Request::isPost()){
+            $data = Request::post();
+            $is_state = 1;
+            $msg = '启用';
+            if($data['is_state'] == 1){
+                $is_state = 2;
+                $msg = '禁用';
+            }
+            $result = $this->dictModel->is_state($data['id'], $is_state);
+            $this->write_logs(7,  '字典id=' . $data['id'] . $msg . is_true($result));
+            if($result){
+                return $this->message($msg . '成功');
+            }
+            return $this->message($msg . '失败', 201);
         }
-        $result = dictModel::where('id', $data['id'])->update(['is_state' => $is_state]);
-        if(!$result){
-            return $this->message(201, $msg . '失败');
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 批量导出
+     */
+    public function batch_down()
+    {
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $result = $this->dictModel->down(1, $ids);
+            $this->write_logs(6, '批量导出字典列表' . is_true($result));
+            $filename = '字典列表-' . date('YmdHis');
+            $head = ['ID', ''];
+            $value = [];
+            Cache::store('memcached')->set('excel', json_encode([
+                'filename' => $filename,
+                'head' => $head,
+                'value' => $value,
+                'data' => $result,
+            ]));
         }
-        return $this->message(200, $msg . '成功');
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 全部导出
+     */
+    public function down_all()
+    {
+        if(Request::isPost()){
+            $result = $this->dictModel->down(2);
+            $this->write_logs(6, '导出全部字典列表' . is_true($result));
+            $filename = '字典列表-' . date('YmdHis');
+            $head = ['ID', ''];
+            $value = [];
+            Cache::store('memcached')->set('excel', json_encode([
+                'filename' => $filename,
+                'head' => $head,
+                'value' => $value,
+                'data' => $result,
+            ]));
+        }
+        return $this->message('请求方式错误', 203);
     }
 }

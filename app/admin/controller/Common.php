@@ -24,7 +24,7 @@ class Common extends Base
         try {
             validate(['file' => ['fileSize:102400,fileExt:gif,jpg,png']])->check(['file' => $data]);
         }catch (ValidateException $e){
-            return $this->message(201, $e->getMessage());
+            return $this->message($e->getMessage());
         }
         $config = dictModel::where('key', 'in', ['qiniu_access_key', 'qiniu_secret_key', 'qiniu_bucket', 'pic_url'])->column('key,val');
         $config = array_column($config, 'val', 'key');
@@ -35,10 +35,10 @@ class Common extends Base
         $uploadMgr = new UploadManager();
         list($ret, $err) = $uploadMgr->putFile($token, $key, $data->getPathname());
         if($err !== null){
-            return $this->message(201, '上传失败');
+            return $this->message('上传失败', 201);
         }else{
             $ret['key'] = $config['pic_url'] . $ret['key'];
-            return $this->message(200, '上传成功', $ret);
+            return $this->message('上传成功', 200, $ret);
         }
     }
 

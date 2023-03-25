@@ -42,5 +42,6 @@ class Admin extends Validate
      */
     protected $scene = [
         'create' => ['username', 'role_ids', 'team_ids', 'job_id'],
+        'update' => ['username', 'role_ids', 'team_ids', 'job_id'],
     ];
 }

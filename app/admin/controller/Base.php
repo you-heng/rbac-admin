@@ -6,8 +6,8 @@ namespace app\admin\controller;
 use think\facade\Cache;
 use think\facade\Config;
 use think\facade\Request;
-use app\admin\model\BlackList as BlackListModel;
 use think\Response;
+use think\facade\Db;
 
 abstract class Base
 {
@@ -28,7 +28,7 @@ abstract class Base
      * @return Response
      * api接口结构
      */
-    protected function message(int $code, string $msg, $data = [], string $type = 'json') : Response
+    protected function message(string $msg, int $code = 200, $data = [], string $type = 'json') : Response
     {
         // api结构
         $result = [
@@ -41,48 +41,38 @@ abstract class Base
     }
 
     /**
-     * @param int $code
-     * @param string $msg
-     * @param $data
-     * @param string $type
-     * @return Response
-     * 列表api结构
+     * @return mixed
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 获取用户信息
      */
-    public function message_list(int $code, string $msg, int $count, $data = [], string $type = 'json') : Response
+    public function get_user()
     {
-        // 列表api结构
-        $result = [
-            'code'  => $code,
-            'msg'   => $msg,
-            'page'  => $this->page,
-            'limit' => $this->limit,
-            'count' => $count,
-            'data'  => $data
-        ];
-
-        return Response::create($result, $type);
+        $uniquid = Request::header('uniquid');
+        $user = Cache::store('redis')->get($uniquid);
+        $user = json_decode($user, true);
+        return $user;
     }
 
 
     /**
+     * @param $tag
+     * @param $content
      * @return void
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      * 写日志
      */
     public function write_logs($tag, $content)
     {
-//        $uniquid = Request::header('uniquid');
-        $uniquid = 'be2e67341bb4177cdfb39839c8716243';
-//        $user = Cache::store('memcached')->get($uniquid);
-         $user = Cache::store('redis')->get($uniquid);
-        $user = json_decode($user, true);
+        $user = $this->get_user();
         $data = [
             'username' => $user['username'],
             'tag' => $tag,
-            'path' => Request::action(),
-            'content' => $content,
+            'path' => Request::pathinfo(),
+            'content' =>  $user['username'] . $content,
             'ip' => Request::ip()
         ];
-        BlackListModel::create($data);
+        // Db::connect('mongo')->name('interface_logs')->insert($data);
+        Db::name('interface_logs')->insert($data);
     }
 
     /**

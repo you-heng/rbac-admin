@@ -8,6 +8,11 @@ function encry($str)
     return md5(sha1(md5($str, Config::get('admin.password_salt'))));
 }
 
+function is_true($str)
+{
+    return isset($str) ? '成功' : '失败';
+}
+
 //根据token获取用户名
 function get_name($token)
 {
@@ -79,4 +84,14 @@ function tree_data($data, $pid = 0)
         }
     }
     return $tree;
+}
+
+// api列表接口结构
+function api_message($msg = '成功', $code = 200, $data = [])
+{
+    return json([
+        'code'  => $code,
+        'msg'   => $msg,
+        'data'  => $data
+    ]);
 }

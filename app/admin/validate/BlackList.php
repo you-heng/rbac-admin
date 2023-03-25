@@ -35,5 +35,6 @@ class BlackList extends Validate
      */
     protected $scene = [
         'create' => ['ip', 'is_type'],
+        'update' => ['ip', 'is_type'],
     ];
 }

@@ -34,6 +34,7 @@ class Dict extends Validate
      * @var array[]
      */
     protected $scene = [
-        'create' => ['key', 'val']
+        'create' => ['key', 'val'],
+        'update' => ['key', 'val'],
     ];
 }

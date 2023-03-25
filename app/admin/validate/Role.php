@@ -34,6 +34,7 @@ class Role extends Validate
      * @var array[]
      */
     protected $scene = [
-        'create' => ['role_name', 'intro']
+        'create' => ['role_name', 'intro'],
+        'update' => ['role_name', 'intro'],
     ];
 }

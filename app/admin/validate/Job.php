@@ -32,6 +32,7 @@ class Job extends Validate
      * @var array[]
      */
     protected $scene = [
-        'create' => ['job_name']
+        'create' => ['job_name'],
+        'update' => ['job_name'],
     ];
 }

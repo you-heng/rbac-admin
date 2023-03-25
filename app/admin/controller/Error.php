@@ -7,6 +7,6 @@ class Error extends Base
 {
     public function index()
     {
-        return $this->message(200, '资源不存在～2222');
+        return $this->message('资源不存在～2222', 201);
     }
 }

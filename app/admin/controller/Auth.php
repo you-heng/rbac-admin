@@ -4,117 +4,112 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Auth as authModel;
-use think\exception\ValidateException;
 use think\facade\Cache;
 use think\facade\Request;
-use app\admin\validate\Auth as authValidate;
 
 class Auth extends Base
 {
+    protected $authModel;
+
+    public function __construct()
+    {
+        $this->authModel = new authModel();
+    }
+
     /**
-     * 列表
-     * @return \think\Response
+     * @return \think\Response|\think\response\Json
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
      * @throws \think\db\exception\ModelNotFoundException
+     * 列表
      */
     public function index()
     {
-        $result = authModel::order('sort', 'desc')->order('sort', 'desc')->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容～');
+        if(Request::isGet()){
+            return $this->authModel->get_auth_list();
         }
-        $data = get_p_name($result, '顶级权限', 'title');
-        $result = tree_data($data);
-        return $this->message(200, '请求成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 添加
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 添加
      */
     public function create()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = authModel::create($data);
-        if(!$result){
-            return $this->message(201, '添加失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->authModel->create_auth($data);
+            $this->write_logs(2, '添加权限' . is_true($result) . '-id=' . $result);
+            if($result){
+                return $this->message('添加成功');
+            }
+            return $this->message('添加失败', 201);
         }
-        return $this->message(200, '添加成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 编辑
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 编辑
      */
     public function update()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = authModel::update($data);
-        if(!$result){
-            return $this->message(201, '修改失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->authModel->update_auth($data);
+            $this->write_logs(3, '修改权限' . is_true($result) . '-id=' . $data['id']);
+            if($result){
+                return $this->message('修改成功');
+            }
+            return $this->message('修改失败', 201);
         }
-        return $this->message(200, '修改成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 验证
-     * @param $data
-     * @return \think\Response|void
-     */
-    public function check($data)
-    {
-        $type = '';
-        if($data['is_menu'] == 1){
-            $type = 'create';
-        }else{
-            $type = 'update';
-        }
-        try {
-            validate(authValidate::class)->scene($type)->check($data);
-        }catch (ValidateException $e){
-            $msg = $e->getError();
-            return $this->message(201, $msg);
-        }
-    }
-
-    /**
-     * 删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 删除
      */
     public function remove()
     {
-        $id = Request::post('id');
-        $p_ids = authModel::field('p_ids')->find($id)->toArray()['p_ids'];
-        halt($p_ids);
-        $result = authModel::destroy($id);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $id = Request::post('id');
+            $result = $this->authModel->remove_auth($id);
+            $this->write_logs(4, '删除权限' . is_true($result) . '-id=' . $id);
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除错误', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 清空
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 清空
      */
     public function remove_all()
     {
-        $result = authModel::where('is_menu', 2)->delete();
-        if(!$result){
-            return $this->message(201, '清空失败');
+        if(Request::isPost()){
+            $result = $this->authModel->remove_auth_all();
+            $this->write_logs(4, '清空权限表' . is_true($result));
+            if($result){
+                return $this->message('清空成功');
+            }
+            return $this->message('清空失败', 201);
         }
-        return $this->message(200, '清空成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 菜单
      * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 菜单
      */
     public function menu()
     {
@@ -122,6 +117,6 @@ class Auth extends Base
 //        $user = Cache::store('memcached')->get($uniquid);
          $user = Cache::store('redis')->get($uniquid);
         $user = json_decode($user, true);
-        return $this->message(200, '成功', $user['role']['menu']);
+        return $this->message('成功', 200, $user['role']['menu']);
     }
 }

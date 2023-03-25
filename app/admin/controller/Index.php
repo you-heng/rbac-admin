@@ -35,7 +35,7 @@ class Index extends Base
         $head = ['ID', '姓名'];
         $value = ['id', 'name'];
         $common = new Common();
-        $common->execl($filename, $head, $value, $data);
+        $common->excel($filename, $head, $value, $data);
 
         //$table = \think\Db::connect('mongo')->table('test')->select();
         /*$table = Db::connect('mongo')->table('test')->select();
@@ -73,14 +73,14 @@ class Index extends Base
         $data = Request::post();
         $captcha = Captcha::check_isolate($data['code'], $data['key']);
         if(!$captcha){
-            return $this->message(201, '验证码错误');
+            return $this->message('验证码错误', 201);
         }
         $admin = adminModel::where('username', $data['username'])->field('username,password,email,phone,avatar,role_ids,is_state')->find()->toArray();
         if($admin['username'] != $data['username'] || $admin['password'] != encry($data['password'])){
-            return $this->message(201, '账号密码错误');
+            return $this->message('账号密码错误', 201);
         }
         if($admin['is_state'] == 2){
-            return $this->message(201, '当前用户被禁用');
+            return $this->message('当前用户被禁用', 201);
         }
         $role = [];
         if($admin['role_ids'][0] != '超级管理员'){
@@ -102,7 +102,6 @@ class Index extends Base
             'jti' => md5($admin['username'] . '-' . uniqid('JWT').time()), // 唯一标识
         ];
         $jwt = JWT::encode($payload, $config['jwt_key'], 'HS256');
-        $admin['avatar'] = json_decode($admin['avatar'], true);
         $username = [
             'username' => $data['username'],
             'password' => $data['password'],
@@ -114,8 +113,15 @@ class Index extends Base
             'avatar' => $admin['avatar']
         ];
 //        Cache::store('memcached')->set($username['uniquid'], json_encode($username));
-         Cache::store('redis')->set($username['uniquid'], json_encode($username));
-        return $this->message(200, '登录成功', $username);
+        Db::name('interface_logs')->insert([
+            'username' => $admin['username'],
+            'tag' => 8,
+            'path' => 'console/' . Request::pathinfo(),
+            'content' =>  $admin['username'] . '登陆成功',
+            'ip' => Request::ip()
+        ]);
+        Cache::store('redis')->set($username['uniquid'], json_encode($username));
+        return $this->message('登录成功', 200, $username);
     }
 
 
@@ -139,7 +145,7 @@ class Index extends Base
         if(!empty($role)){
             foreach($role as $v){
                 if($v['is_state'] == 2){
-                    return $this->message(201, '当前角色被禁用');
+                    return $this->message('当前角色被禁用', 201);
                 }
             }
         }
@@ -163,7 +169,7 @@ class Index extends Base
         $uniquid = Request::header('uniquid');
 //        Cache::store('memcached')->delete($uniquid);
          Cache::store('redis')->delete($uniquid);
-        return $this->message(200, '退出登录');
+        return $this->message('退出登录');
     }
 
     /**
@@ -173,7 +179,7 @@ class Index extends Base
     public function captcha()
     {
         $captcha = Captcha::create_isolate();
-        return $this->message(200, '成功', $captcha);
+        return $this->message('成功', 200, $captcha);
     }
 
     /**
@@ -185,9 +191,9 @@ class Index extends Base
         $config = dictModel::where('key', 'in', ['sys_title', 'sys_log'])->column('key,val');
         if(!empty($config)){
             $config = array_column($config, 'val', 'key');
-            return $this->message(201, '成功', $config);
+            return $this->message('成功', 200, $config);
         }
-        return $this->message(201, '暂无内容~');
+        return $this->message('暂无内容~', 201);
     }
 
     /**
@@ -214,7 +220,7 @@ class Index extends Base
         $user['avatar'] = $admin['avatar'];
 //        Cache::store('memcached')->set($uniquid, json_encode($user));
          Cache::store('redis')->set($uniquid, json_encode($user));
-        return $this->message(200, '更新成功', $user);
+        return $this->message('更新成功', 200, $user);
     }
 
     /**
@@ -230,14 +236,14 @@ class Index extends Base
         $password = encry($data['password']);
         $admin = adminModel::where('username', $data['username'])->field('username,password')->find();
         if($admin['password'] != $password){
-            return $this->message(201, '旧密码不正确');
+            return $this->message('旧密码不正确', 201);
         }
         if($data['newPassword'] != $data['makePassword']){
-            return $this->message(201, '两次密码不一致');
+            return $this->message('两次密码不一致', 201);
         }
         $new = encry($data['newPassword']);
         adminModel::where('username', $data['username'])->update(['password' => $new]);
-        return $this->message(200, '密码修改成功，请重新登录');
+        return $this->message('密码修改成功，请重新登录', 200);
     }
 
     /**

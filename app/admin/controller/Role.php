@@ -4,163 +4,174 @@ declare (strict_types = 1);
 namespace app\admin\controller;
 
 use app\admin\model\Role as roleModel;
-use think\exception\ValidateException;
 use think\facade\Request;
-use app\admin\validate\Role as roleValidate;
 
 class Role extends Base
 {
+    protected $roleModel;
+
+    public function __construct()
+    {
+        $this->roleModel = new roleModel();
+    }
+
     /**
+     * @return \think\Response|\think\response\Json
      * 列表
-     * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
      */
     public function index()
     {
-        $result = roleModel::page($this->page, $this->limit)->order('sort', 'desc')->select();
-        if(!$result){
-            return $this->message(201, '暂无内容～');
+        if(Request::isGet()){
+            return $this->roleModel->get_rol_list($this->limit);
         }
-        $count = roleModel::count('id');
-        return $this->message_list(200, '请求成功', $count, $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 添加
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 添加
      */
     public function create()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = roleModel::create($data);
-        if(!$result){
-            return $this->message(201, '添加失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->roleModel->create_role($data);
+            $this->write_logs(2, '添加角色' . is_true($result) . '-id=' . $result);
+            if($result){
+                return $this->message('添加成功');
+            }
+            return $this->message('添加失败', 201);
         }
-        return $this->message(200, '添加成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 编辑
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 编辑
      */
     public function update()
     {
-        $data = Request::post();
-        $this->check($data);
-        $result = roleModel::update($data);
-        if(!$result){
-            return $this->message(201, '修改失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->roleModel->update_role($data);
+            $this->write_logs(3, '修改角色' . is_true($result) . '-id=' . $data['id']);
+            if($result){
+                return $this->message('修改成功');
+            }
+            return $this->message('修改失败', 201);
         }
-        return $this->message(200, '修改成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 验证
-     * @param $data
-     * @return \think\Response|void
-     */
-    public function check($data)
-    {
-        try {
-            validate(roleValidate::class)->scene('create')->check($data);
-        }catch (ValidateException $e){
-            $msg = $e->getError();
-            return $this->message(201, $msg);
-        }
-    }
-
-    /**
-     * 删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 删除
      */
     public function remove()
     {
-        $id = Request::post('id');
-        $result = roleModel::destroy($id);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $id = Request::post('id');
+            $result = $this->roleModel->remove_role($id);
+            $this->write_logs(4, '删除角色' . is_true($result) . '-id=' . $id);
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除失败', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 批量删除
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 批量删除
      */
     public function batch_remove()
     {
-        $ids = Request::post('ids');
-        $result = roleModel::destroy($ids);
-        if(!$result){
-            return $this->message(201, '删除失败');
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $result = $this->roleModel->remove_role($ids);
+            $this->write_logs(4, '批量删除角色' . is_true($result) . '-id=' . implode(',', $ids));
+            if($result){
+                return $this->message('删除成功');
+            }
+            return $this->message('删除失败', 201);
         }
-        return $this->message(200, '删除成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 清空
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 清空
      */
     public function remove_all()
     {
-        $result = roleModel::where('id', '<>', 1)->delete();
-        if(!$result){
-            return $this->message(201, '清空失败');
+        if(Request::isPost()){
+            $result = $this->roleModel->remove_role_all();
+            $this->write_logs(4, '清空角色表' . is_true($result));
+            if($result){
+                return $this->message('清空成功');
+            }
+            return $this->message('清空失败', 201);
         }
-        return $this->message(200, '清空成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 搜索
      * @return \think\Response
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 搜索
      */
     public function search()
     {
-        $data = Request::post();
-        $result = roleModel::withSearch([$data['select']], [$data['select'] => $data['search']])->select()->toArray();
-        if(!$result){
-            return $this->message(201, '暂无内容~');
+        if(Request::isPost()){
+            $data = Request::post();
+            $result = $this->roleModel->search($data);
+            $this->write_logs(5, '搜索'. $data['select'] . '=' . $data['search'] . is_true($result));
+            return $this->message('请求成功', 200, $result);
         }
-        return $this->message(200, '请求成功', $result);
+        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * 状态
      * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 状态
      */
     public function is_state()
     {
-        $data = Request::post();
-        $is_state = 1;
-        $msg = '启用';
-        if($data['is_state'] == 1){
-            $is_state = 2;
-            $msg = '禁用';
+        if(Request::isPost()){
+            $data = Request::post();
+            $is_state = 1;
+            $msg = '启用';
+            if($data['is_state'] == 1){
+                $is_state = 2;
+                $msg = '禁用';
+            }
+            $result = $this->roleModel->is_state($data['id'], $is_state);
+            $this->write_logs(7,  '角色id=' . $data['id'] . $msg . is_true($result));
+            if($result){
+                return $this->message($msg . '成功');
+            }
+            return $this->message($msg . '失败', 201);
         }
-        $result = roleModel::where('id', $data['id'])->update(['is_state' => $is_state]);
-        if(!$result){
-            return $this->message(201, $msg . '失败');
-        }
-        return $this->message(200, $msg . '成功');
+        return $this->message('请求方式错误', 203);
     }
 
     /**
+     * @return \think\Response|\think\response\Json
      * 授权
-     * @return \think\Response
      */
     public function auth()
     {
-        $data = Request::post();
-        $result = roleModel::where('id', $data['id'])->update(['menu_ids' => $data['auths']['menu_ids'], 'auth_ids' => $data['auths']['auth_ids']]);
-        if(!$result){
-            return $this->message(201, '授权失败');
+        if(Request::isPost()){
+            $data = Request::post();
+            return $this->roleModel->auth($data);
         }
-        return $this->message(200, '授权成功');
+        return $this->message('请求方式错误', 203);
     }
 }
