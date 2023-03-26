@@ -8,9 +8,28 @@ function encry($str)
     return md5(sha1(md5($str, Config::get('admin.password_salt'))));
 }
 
+// 判断结果
 function is_true($str)
 {
     return isset($str) ? '成功' : '失败';
+}
+
+// 判断字典类型
+function is_type($type)
+{
+    $is_type = 0;
+    switch ($type){
+        case 'text':
+            $is_type = 1;
+            break;
+        case 'json':
+            $is_type = 2;
+            break;
+        case 'image':
+            $is_type = 3;
+            break;
+    }
+    return $is_type;
 }
 
 //根据token获取用户名

@@ -22,11 +22,6 @@ class Dict extends Base
         $query->where('key', 'like', '%' . $value . '%');
     }
 
-    public function searchValAttr($query, $value, $data)
-    {
-        $query->where('val', 'like', '%' . $value . '%');
-    }
-
     public function searchRemarkAttr($query, $value, $data)
     {
         $query->where('remark', 'like', '%' . $value . '%');
@@ -37,17 +32,42 @@ class Dict extends Base
      * @return \think\response\Json
      * 获取字段列表
      */
-    public function get_dict_list($limit)
+    public function get_dict_list($limit, $is_type)
     {
         try {
-            $result = $this->order('sort', 'desc')->paginate($limit);
+            $type = is_type($is_type);
+            $result = $this->where('is_type', $type)->order('sort', 'desc')->paginate($limit);
             if($result->isEmpty()){
                 return api_message('暂无内容~', 201);
             }
-            return api_message('请求成功', 200, $result);
+            return api_message('请求成功', 200, $this->type_change($is_type, $result));
         }catch (Exception $e){
             return api_message($e->getMessage(), 201);
         }
+    }
+
+    /**
+     * @param $is_type
+     * @param $data
+     * @return array
+     * 根据类型将数据转换成对应的结构
+     */
+    public function type_change($is_type, $data)
+    {
+        switch ($is_type){
+            case 'json':
+                foreach($data as $k => $v){
+                    $temp = json_decode($v['val'], true);
+                    $data[$k]['val'] = implode('+', $temp);
+                }
+                break;
+            case 'image':
+                foreach($data as $k => $v){
+                    $data[$k]['val'] = json_decode($v['val'], true);
+                }
+                break;
+        }
+        return $data;
     }
 
     /**
@@ -58,6 +78,7 @@ class Dict extends Base
     public function create_dict($data)
     {
         $this->check($data, 'create');
+        $this->change($data);
         return $this->insertGetId($data);
     }
 
@@ -69,7 +90,27 @@ class Dict extends Base
     public function update_dict($data)
     {
         $this->check($data, 'update');
+        $this->change($data);
         return $this->update($data);
+    }
+
+    /**
+     * @param $data
+     * @return mixed
+     * 入库前将内容转换成json类型
+     */
+    public function change($data)
+    {
+        switch ($data['is_type']){
+            case 'json':
+                $temp = explode('+', $data['val']);
+                $data['val'] = json_encode($temp);
+                break;
+            case 'image':
+                $data['val'] = json_encode($data['val']);
+                break;
+        }
+        return $data;
     }
 
     /**

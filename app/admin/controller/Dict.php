@@ -26,7 +26,8 @@ class Dict extends Base
     public function index()
     {
         if(Request::isGet()){
-            return $this->dictModel->get_dict_list($this->limit);
+            $is_type = Request::get('is_type');
+            return $this->dictModel->get_dict_list($this->limit, $is_type);
         }
         return $this->message('请求方式错误', 203);
     }
