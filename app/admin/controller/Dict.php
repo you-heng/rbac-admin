@@ -42,7 +42,7 @@ class Dict extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->dictModel->create_dict($data);
-            $this->write_logs(2, '添加字典' . is_true($result) . '-id=' . $result);
+            $this->write_logs(2, '添加字典' . is_true($result) . 'id=' . $result);
             if($result){
                 return $this->message('添加成功');
             }
@@ -61,7 +61,7 @@ class Dict extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->dictModel->update_dict($data);
-            $this->write_logs(3, '修改字典' . is_true($result) . '-id=' . $data['id']);
+            $this->write_logs(3, '修改字典' . is_true($result) . 'id=' . $data['id']);
             if($result){
                 return $this->message('修改成功');
             }
@@ -80,7 +80,7 @@ class Dict extends Base
         if(Request::isPost()){
             $id = Request::post('id');
             $result = $this->dictModel->remove_dict($id);
-            $this->write_logs(4, '删除字典' . is_true($result) . '-id=' . $id);
+            $this->write_logs(4, '删除字典' . is_true($result) . 'id=' . $id);
             if($result){
                 return $this->message('删除成功');
             }
@@ -99,7 +99,7 @@ class Dict extends Base
         if(Request::isPost()){
             $ids = Request::post('ids');
             $result = $this->dictModel->remove_dict($ids);
-            $this->write_logs(4, '批量删除字典' . is_true($result) . '-id=' . implode(',', $ids));
+            $this->write_logs(4, '批量删除字典' . is_true($result) . 'id=' . implode(',', $ids));
             if($result){
                 return $this->message('删除成功');
             }
@@ -178,44 +178,9 @@ class Dict extends Base
     public function batch_down()
     {
         if(Request::isPost()){
-            $ids = Request::post('ids');
-            $result = $this->dictModel->down(1, $ids);
-            $this->write_logs(6, '批量导出字典列表' . is_true($result));
-            $filename = '字典列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
-        }
-        return $this->message('请求方式错误', 203);
-    }
-
-    /**
-     * @return \think\Response
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     * 全部导出
-     */
-    public function down_all()
-    {
-        if(Request::isPost()){
-            $result = $this->dictModel->down(2);
-            $this->write_logs(6, '导出全部字典列表' . is_true($result));
-            $filename = '字典列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
+            $data = Request::post();
+            $this->dictModel->down($data);
+            $this->write_logs(6, '批量导出字典列表');
         }
         return $this->message('请求方式错误', 203);
     }

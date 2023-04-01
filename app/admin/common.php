@@ -2,19 +2,31 @@
 // 这是系统自动生成的公共文件
 use think\facade\Config;
 
-// 加密
+/**
+ * @param $str
+ * @return string
+ * 加密
+ */
 function encry($str)
 {
     return md5(sha1(md5($str, Config::get('admin.password_salt'))));
 }
 
-// 判断结果
+/**
+ * @param $str
+ * @return string
+ * 判断结果
+ */
 function is_true($str)
 {
     return isset($str) ? '成功' : '失败';
 }
 
-// 判断字典类型
+/**
+ * @param $type
+ * @return int
+ * 判断字典类型
+ */
 function is_type($type)
 {
     $is_type = 0;
@@ -50,7 +62,11 @@ function ip_to_address()
 
 }
 
-// 菜单结构
+/**
+ * @param $data
+ * @return array
+ * 菜单结构
+ */
 function menu_tree($data){
     $menu = fields($data);
     foreach($menu as $k => $v){
@@ -63,7 +79,11 @@ function menu_tree($data){
     return $menu;
 }
 
-// 过滤字段
+/**
+ * @param $data
+ * @return array
+ * 过滤字段
+ */
 function fields($data){
     $menu = [];
     foreach($data as $v){
@@ -78,7 +98,13 @@ function fields($data){
     return $menu;
 }
 
-// 获取父级名称
+/**
+ * @param $data
+ * @param $name
+ * @param $file
+ * @return array
+ * 获取父级名称
+ */
 function get_p_name($data, $name, $file){
     $result = [];
     foreach($data as $v){
@@ -92,7 +118,12 @@ function get_p_name($data, $name, $file){
     return $result;
 }
 
-// 树形结构
+/**
+ * @param $data
+ * @param $pid
+ * @return array
+ * 树形结构
+ */
 function tree_data($data, $pid = 0)
 {
     $tree = [];
@@ -105,7 +136,13 @@ function tree_data($data, $pid = 0)
     return $tree;
 }
 
-// api列表接口结构
+/**
+ * @param $msg
+ * @param $code
+ * @param $data
+ * @return \think\response\Json
+ * api列表接口结构
+ */
 function api_message($msg = '成功', $code = 200, $data = [])
 {
     return json([

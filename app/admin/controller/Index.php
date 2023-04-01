@@ -246,20 +246,6 @@ class Index extends Base
         return $this->message('密码修改成功，请重新登录', 200);
     }
 
-    /**
-     * @return void
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     * 导出execl
-     */
-    public function excel()
-    {
-        $execl = Cache::store('redis')->get('excel');
-//        $execl = Cache::store('memcached')->get('execl');
-        $execl = json_decode($execl, true);
-        $common = new Common();
-        $common->excel($execl['filename'], $execl['head'], $execl['value'], $execl['data']);
-    }
-
     public function echarts()
     {
         //$year = recordModel::whereYear('create_time')->select()->toArray();

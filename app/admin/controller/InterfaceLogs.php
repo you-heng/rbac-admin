@@ -54,7 +54,7 @@ class InterfaceLogs extends Base
         if(Request::isPost()){
             $id = Request::post('id');
             $result = $this->interfaceLogsModel->remove_logs($id);
-            $this->write_logs(4, '删除日志' . is_true($result) . '-id=' . $id);
+            $this->write_logs(4, '删除日志' . is_true($result) . 'id=' . $id);
             if($result){
                 return $this->message('删除成功');
             }
@@ -73,7 +73,7 @@ class InterfaceLogs extends Base
         if(Request::isPost()){
             $ids = Request::post('ids');
             $result = $this->interfaceLogsModel->remove_logs($ids);
-            $this->write_logs(4, '批量删除日志' . is_true($result) . '-id=' . implode(',', $ids));
+            $this->write_logs(4, '批量删除日志' . is_true($result) . 'id=' . implode(',', $ids));
             if($result){
                 return $this->message('删除成功');
             }
@@ -112,17 +112,8 @@ class InterfaceLogs extends Base
     {
         if(Request::isPost()){
             $ids = Request::post('ids');
-            $result = $this->interfaceLogsModel->down(1, $ids);
-            $this->write_logs(6, '批量导出日志列表' . is_true($result));
-            $filename = '日志列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
+            $this->interfaceLogsModel->down(1, $ids);
+            $this->write_logs(6, '批量导出日志列表');
         }
         return $this->message('请求方式错误', 203);
     }
@@ -138,17 +129,8 @@ class InterfaceLogs extends Base
     public function down_all()
     {
         if(Request::isPost()){
-            $result = $this->interfaceLogsModel->down(2);
-            $this->write_logs(6, '导出全部字典列表' . is_true($result));
-            $filename = '字典列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
+            $this->interfaceLogsModel->down(2);
+            $this->write_logs(6, '导出全部字典列表');
         }
         return $this->message('请求方式错误', 203);
     }

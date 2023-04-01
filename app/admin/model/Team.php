@@ -3,6 +3,7 @@ declare (strict_types = 1);
 
 namespace app\admin\model;
 
+use app\admin\controller\Common;
 use think\Exception;
 use app\admin\validate\Team as teamValidate;
 use think\exception\ValidateException;
@@ -25,7 +26,7 @@ class Team extends Base
     public function get_team_list()
     {
         try {
-            $result = $this->order('sort', 'desc')->order('sort', 'desc')->select();
+            $result = $this->order('sort', 'desc')->select();
             if($result){
                 $data = get_p_name($result, '顶级部门', 'team_name');
                 return tree_data($data);
@@ -99,6 +100,25 @@ class Team extends Base
     public function is_state($id, $is_state)
     {
         return $this->update(['id' => $id, 'is_state' => $is_state]);
+    }
+
+    /**
+     * @return void
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 全部导出
+     */
+    public function down()
+    {
+        $result = $this->select();
+        $result =  get_p_name($result, '顶级部门', 'team_name');
+        $filename = '角色列表';
+        $head = ['ID', '部门名称', '父级权限', '状态', '排序', '创建时间'];
+        $value = ['id', 'team_name', 'p_name', 'is_state', 'sort', 'create_time'];
+        $common = new Common();
+        $common->excel($filename, $head, $value, $result);
     }
 
 }

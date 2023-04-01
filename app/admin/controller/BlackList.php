@@ -41,7 +41,7 @@ class BlackList extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->blackListModel->create_black_list($data);
-            $this->write_logs(2, '添加黑名单ip' . is_true($result) . '-id=' . $result);
+            $this->write_logs(2, '添加黑名单ip' . is_true($result) . 'id=' . $result);
             if($result){
                 return $this->message('添加成功');
             }
@@ -60,7 +60,7 @@ class BlackList extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->blackListModel->update_black_list($data);
-            $this->write_logs(3, '修改黑名单ip' . is_true($result) . '-id=' . $data['id']);
+            $this->write_logs(3, '修改黑名单ip' . is_true($result) . 'id=' . $data['id']);
             if($result){
                 return $this->message('修改成功');
             }
@@ -79,7 +79,7 @@ class BlackList extends Base
         if(Request::isPost()){
             $id = Request::post('id');
             $result = $this->blackListModel->remove_black_list($id);
-            $this->write_logs(4, '删除黑名单ip' . is_true($result) . '-id=' . $id);
+            $this->write_logs(4, '删除黑名单ip' . is_true($result) . 'id=' . $id);
             if($result){
                 return api_message('删除成功');
             }
@@ -98,7 +98,7 @@ class BlackList extends Base
         if(Request::isPost()){
             $ids = Request::post('ids');
             $result = $this->blackListModel->remove_black_list($ids);
-            $this->write_logs(4, '批量删除黑名单ip' . is_true($result) . '-id=' . implode(',', $ids));
+            $this->write_logs(4, '批量删除黑名单ip' . is_true($result) . 'id=' . implode(',', $ids));
             if($result){
                 return api_message('删除成功');
             }
@@ -178,17 +178,8 @@ class BlackList extends Base
     {
         if(Request::isPost()){
             $ids = Request::post('ids');
-            $result = $this->blackListModel->down(1, $ids);
-            $this->write_logs(6, '批量导出ip黑名单列表' . is_true($result));
-            $filename = 'ip黑名单列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
+            $this->blackListModel->down(1, $ids);
+            $this->write_logs(6, '批量导出ip黑名单列表');
         }
         return $this->message('请求方式错误', 203);
     }
@@ -204,17 +195,8 @@ class BlackList extends Base
     public function down_all()
     {
         if(Request::isPost()){
-            $result = $this->blackListModel->down(2);
-            $this->write_logs(6, '导出全部ip黑名单列表' . is_true($result));
-            $filename = 'ip黑名单列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
+            $this->blackListModel->down(2);
+            $this->write_logs(6, '导出全部ip黑名单列表');
         }
         return $this->message('请求方式错误', 203);
     }

@@ -3,6 +3,7 @@ declare (strict_types = 1);
 
 namespace app\admin\model;
 
+use app\admin\controller\Common;
 use think\Exception;
 use think\exception\ValidateException;
 use app\admin\validate\Dict as dictValidate;
@@ -181,12 +182,17 @@ class Dict extends Base
      * @throws \think\db\exception\ModelNotFoundException
      * 导出
      */
-    public function down($type, $ids=[])
+    public function down($data)
     {
-        if($type === 1){
-            return $this->where('id', 'in', $ids)->select();
-        }else{
-            return $this->select();
+        if($data['is_type'] == 'image'){
+            return api_message('图片类型不能被导出', 201);
         }
+        $result = $this->where('id', 'in', $data['ids'])->select();
+        $result = $this->type_change($data['is_type'], $result);
+        $filename = '字典列表';
+        $head = ['ID', '配置名', '配置值', '备注', '类型', '状态', '排序', '创建时间'];
+        $value = ['id', 'key', 'val', 'remark', 'is_type', 'is_state', 'sort', 'create_time'];
+        $common = new Common();
+        $common->excel($filename, $head, $value, $result);
     }
 }

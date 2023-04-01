@@ -3,6 +3,7 @@ declare (strict_types = 1);
 
 namespace app\admin\model;
 
+use app\admin\controller\Common;
 use think\Exception;
 use app\admin\validate\Auth as authValidate;
 use think\exception\ValidateException;
@@ -94,5 +95,24 @@ class Auth extends Base
     public function remove_auth_all()
     {
         return $this->where('is_menu',2)->delete();
+    }
+
+    /**
+     * @return void
+     * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 导出
+     */
+    public function down()
+    {
+        $result = $this->select();
+        $result = get_p_name($result, '顶级权限', 'title');
+        $filename = '角色列表';
+        $head = ['ID', '权限名称', '地址', '父级权限', '类型', '排序', '创建时间'];
+        $value = ['id', 'title', 'path', 'p_name', 'is_menu', 'sort', 'create_time'];
+        $common = new Common();
+        $common->excel($filename, $head, $value, $result);
     }
 }

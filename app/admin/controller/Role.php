@@ -37,7 +37,7 @@ class Role extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->roleModel->create_role($data);
-            $this->write_logs(2, '添加角色' . is_true($result) . '-id=' . $result);
+            $this->write_logs(2, '添加角色' . is_true($result) . 'id=' . $result);
             if($result){
                 return $this->message('添加成功');
             }
@@ -56,7 +56,7 @@ class Role extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->roleModel->update_role($data);
-            $this->write_logs(3, '修改角色' . is_true($result) . '-id=' . $data['id']);
+            $this->write_logs(3, '修改角色' . is_true($result) . 'id=' . $data['id']);
             if($result){
                 return $this->message('修改成功');
             }
@@ -75,7 +75,7 @@ class Role extends Base
         if(Request::isPost()){
             $id = Request::post('id');
             $result = $this->roleModel->remove_role($id);
-            $this->write_logs(4, '删除角色' . is_true($result) . '-id=' . $id);
+            $this->write_logs(4, '删除角色' . is_true($result) . 'id=' . $id);
             if($result){
                 return $this->message('删除成功');
             }
@@ -94,7 +94,7 @@ class Role extends Base
         if(Request::isPost()){
             $ids = Request::post('ids');
             $result = $this->roleModel->remove_role($ids);
-            $this->write_logs(4, '批量删除角色' . is_true($result) . '-id=' . implode(',', $ids));
+            $this->write_logs(4, '批量删除角色' . is_true($result) . 'id=' . implode(',', $ids));
             if($result){
                 return $this->message('删除成功');
             }
@@ -171,6 +171,41 @@ class Role extends Base
         if(Request::isPost()){
             $data = Request::post();
             return $this->roleModel->auth($data);
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 批量导出
+     */
+    public function batch_down()
+    {
+        if(Request::isPost()){
+            $ids = Request::post('ids');
+            $this->roleModel->down(1, $ids);
+            $this->write_logs(6, '批量导出角色列表');
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
+     * 导出全部
+     */
+    public function down_all()
+    {
+        if(Request::isPost()){
+            $this->roleModel->down(2);
+            $this->write_logs(6, '导出全部角色列表');
         }
         return $this->message('请求方式错误', 203);
     }

@@ -95,7 +95,7 @@ class Job extends Base
         if(Request::isPost()){
             $ids = Request::post('ids');
             $result = $this->jobModel->remove_job($ids);
-            $this->write_logs(4, '批量删除职位' . is_true($result) . '-id=' . implode(',', $ids));
+            $this->write_logs(4, '批量删除职位' . is_true($result) . 'id=' . implode(',', $ids));
             if($result){
                 return $this->message('删除成功');
             }
@@ -116,25 +116,10 @@ class Job extends Base
     {
         if(Request::isPost()){
             $ids = Request::post('ids');
-            $result = $this->jobModel->down(1, $ids);
-            $filename = '职位管理-' . date('YmdHis');
-            $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
-            $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
-            Cache::store('redis')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result
-            ]));
+            $this->jobModel->down(1, $ids);
+            $this->write_logs(6, '批量导出职位列表');
         }
         return $this->message('请求方式错误', 203);
-
-        /*Cache::store('memcached')->set('excel', json_encode([
-            'filename' => $filename,
-            'head' => $head,
-            'value' => $value,
-            'data' => $data
-        ]));*/
     }
 
     /**
@@ -148,25 +133,10 @@ class Job extends Base
     public function down_all()
     {
         if(Request::isPost()){
-            $result = $this->jobModel->down(2);
-            $filename = '职位管理-' . date('YmdHis');
-            $head = ['ID', '岗位名称', '排序', '创建时间', '修改时间'];
-            $value = ['id', 'job_name', 'sort', 'create_time', 'update_time'];
-            Cache::store('redis')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result
-            ]));
+            $this->jobModel->down(2);
+            $this->write_logs(6, '导出全部职位列表');
         }
         return $this->message('请求方式错误', 203);
-
-        /*Cache::store('memcached')->set('excel', json_encode([
-            'filename' => $filename,
-            'head' => $head,
-            'value' => $value,
-            'data' => $data
-        ]));*/
     }
 
     /**

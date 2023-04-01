@@ -3,6 +3,7 @@ declare (strict_types = 1);
 
 namespace app\admin\model;
 
+use app\admin\controller\Common;
 use app\admin\validate\BlackList as blackListValidate;
 use think\Exception;
 use think\exception\ValidateException;
@@ -139,10 +140,16 @@ class BlackList extends Base
      */
     public function down($type, $ids=[])
     {
+        $result = [];
         if($type === 1){
-            return $this->where('id', 'in', $ids)->select();
+            $result = $this->where('id', 'in', $ids)->select();
         }else{
-            return $this->select();
+            $result = $this->select();
         }
+        $filename = 'IP防火墙列表';
+        $head = ['ID', 'IP', '拉黑理由', '冻结时间', '类型', '状态', '排序', '创建时间'];
+        $value = ['id', 'ip', 'reason', 'time', 'is_type', 'is_state', 'sort', 'create_time'];
+        $common = new Common();
+        $common->excel($filename, $head, $value, $result);
     }
 }

@@ -3,6 +3,7 @@ declare (strict_types = 1);
 
 namespace app\admin\model;
 
+use app\admin\controller\Common;
 use think\exception\ValidateException;
 use app\admin\validate\Job as jobValidate;
 use think\Exception;
@@ -134,10 +135,16 @@ class Job extends Base
      */
     public function down($type, $ids=[])
     {
+        $result = [];
         if($type === 1){
-            return $this->where('id', 'in', $ids)->select();
+            $result = $this->where('id', 'in', $ids)->select();
         }else{
-            return $this->select();
+            $result = $this->select();
         }
+        $filename = '职位列表';
+        $head = ['ID', '岗位名称', '排序', '创建时间'];
+        $value = ['id', 'job_name', 'sort', 'create_time'];
+        $common = new Common();
+        $common->excel($filename, $head, $value, $result);
     }
 }

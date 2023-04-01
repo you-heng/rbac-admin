@@ -40,7 +40,7 @@ class Team extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->teamModel->create_team($data);
-            $this->write_logs(2, '添加团队' . is_true($result) . '-id=' . $result);
+            $this->write_logs(2, '添加团队' . is_true($result) . 'id=' . $result);
             if($result){
                 return $this->message('添加成功');
             }
@@ -58,7 +58,7 @@ class Team extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->teamModel->update_team($data);
-            $this->write_logs(3, '修改团队' . is_true($result) . '-id=' . $result);
+            $this->write_logs(3, '修改团队' . is_true($result) . 'id=' . $result);
             if($result){
                 return $this->message('修改成功');
             }
@@ -77,7 +77,7 @@ class Team extends Base
         if(Request::isPost()){
             $id = Request::post('id');
             $result = $this->teamModel->remove_team($id);
-            $this->write_logs(4, '删除团队' . is_true($result) . '-id=' . $result);
+            $this->write_logs(4, '删除团队' . is_true($result) . 'id=' . $result);
             if($result){
                 return $this->message('删除成功');
             }
@@ -125,6 +125,20 @@ class Team extends Base
                 return $this->message($msg . '失败', 201);
             }
             return $this->message($msg . '成功');
+        }
+        return $this->message('请求方式错误', 203);
+    }
+
+    /**
+     * @return \think\Response
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     * 导出全部
+     */
+    public function down_all()
+    {
+        if(Request::isPost()){
+            $this->teamModel->down();
+            $this->write_logs(6, '导出全部团队列表');
         }
         return $this->message('请求方式错误', 203);
     }

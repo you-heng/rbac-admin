@@ -3,11 +3,13 @@ declare (strict_types = 1);
 
 namespace app\admin\model;
 
+use app\admin\controller\Common;
 use think\Exception;
 use think\exception\ValidateException;
 use app\admin\validate\Admin as adminValidate;
 use app\admin\model\Dict as dictModel;
 use app\admin\model\Team as teamModel;
+use think\facade\Cache;
 
 /**
  * @mixin \think\Model
@@ -134,7 +136,7 @@ class Admin extends Base
     public function create_admin($data)
     {
         $this->check($data, 'create');
-        $config = dictModel::where('is_state' , 1)->where('key', 'in', ['user_pass', 'user_avatar', 'user_phone', 'user_email'])->field('key,val')->select();
+        $config = dictModel::where('is_state' , 1)->where('key', 'in', ['user_pass', 'user_avatar', 'user_phone', 'user_email'])->column('key,val');
         $config = array_column($config, 'val', 'key');
         $data['password'] = encry($config['user_pass']);
         $data['avatar'] = $config['user_avatar'];
@@ -250,10 +252,17 @@ class Admin extends Base
      */
     public function down($type, $ids=[])
     {
+        $result = [];
         if($type === 1){
-            return $this->where('id', 'in', $ids)->select();
+            $result = $this->where('id', 'in', $ids)->select();
         }else{
-            return $this->select();
+            $result = $this->select();
         }
+        $result = $this->team_name($result);
+        $filename = '管理员列表';
+        $head = ['ID', '用户名', '手机号码', '邮箱', '角色', '部门', '岗位', '状态', '排序', '创建时间'];
+        $value = ['id', 'username', 'phone', 'email', 'role_name', 'team_name', 'job_name', 'is_state', 'sort', 'create_time'];
+        $common = new Common();
+        $common->excel($filename, $head, $value, $result);
     }
 }

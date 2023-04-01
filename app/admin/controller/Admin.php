@@ -97,7 +97,7 @@ class Admin extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->adminModel->create_admin($data);
-            $this->write_logs(2, '添加管理员' . is_true($result) . '-id=' . $result);
+            $this->write_logs(2, '添加管理员' . is_true($result) . 'id=' . $result);
             if($result){
                 return $this->message('添加成功');
             }
@@ -116,7 +116,7 @@ class Admin extends Base
         if(Request::isPost()){
             $data = Request::post();
             $result = $this->adminModel->update_admin($data);
-            $this->write_logs(3, '修改管理员' . is_true($result) . '-id=' . $data['id']);
+            $this->write_logs(3, '修改管理员' . is_true($result) . 'id=' . $data['id']);
             if($result){
                 return $this->message('修改成功');
             }
@@ -135,7 +135,7 @@ class Admin extends Base
         if(Request::isPost()){
             $id = Request::post('id');
             $result = $this->adminModel->remove_admin($id);
-            $this->write_logs(4, '删除管理员' . is_true($result) . '-id=' . $id);
+            $this->write_logs(4, '删除管理员' . is_true($result) . 'id=' . $id);
             if($result){
                 return $this->message('删除成功');
             }
@@ -154,7 +154,7 @@ class Admin extends Base
         if(Request::isPost()){
             $ids = Request::post('ids');
             $result = $this->adminModel->remove_admin($ids);
-            $this->write_logs(4, '批量删除管理员' . is_true($result) . '-id=' . implode(',', $ids));
+            $this->write_logs(4, '批量删除管理员' . is_true($result) . 'id=' . implode(',', $ids));
             if($result){
                 return $this->message('删除成功');
             }
@@ -228,31 +228,24 @@ class Admin extends Base
 
 
     /**
-     * @return \think\Response
+     * @return void
      * @throws \Psr\SimpleCache\InvalidArgumentException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      * 批量导出
      */
     public function batch_down()
     {
         if(Request::isPost()){
             $ids = Request::post('ids');
-            $result = $this->adminModel->down(1, $ids);
-            $this->write_logs(6, '批量导出管理员列表' . is_true($result));
-            $filename = '管理员列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
+            $this->adminModel->down(1, $ids);
+            $this->write_logs(6, '批量导出管理员列表');
         }
-        return $this->message('请求方式错误', 203);
     }
 
     /**
-     * @return \think\Response
+     * @return void
      * @throws \Psr\SimpleCache\InvalidArgumentException
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\DbException
@@ -262,18 +255,8 @@ class Admin extends Base
     public function down_all()
     {
         if(Request::isPost()){
-            $result = $this->adminModel->down(2);
-            $this->write_logs(6, '导出全部管理员列表' . is_true($result));
-            $filename = '管理员列表-' . date('YmdHis');
-            $head = ['ID', ''];
-            $value = [];
-            Cache::store('memcached')->set('excel', json_encode([
-                'filename' => $filename,
-                'head' => $head,
-                'value' => $value,
-                'data' => $result,
-            ]));
+            $this->adminModel->down(2);
+            $this->write_logs(6, '导出全部管理员列表');
         }
-        return $this->message('请求方式错误', 203);
     }
 }
