@@ -71,8 +71,7 @@ abstract class Base
             'content' =>  $user['username'] . $content,
             'ip' => Request::ip()
         ];
-        // Db::connect('mongo')->name('interface_logs')->insert($data);
-        Db::name('interface_logs')->insert($data);
+        Db::connect('mongo')->name('interface_logs')->insert($data);
     }
 
     /**

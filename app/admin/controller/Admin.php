@@ -6,7 +6,6 @@ namespace app\admin\controller;
 use app\admin\model\Admin as adminModel;
 use app\admin\model\Role as roleModel;
 use app\admin\model\Job as jobModel;
-use think\facade\Cache;
 use think\facade\Request;
 
 class Admin extends Base

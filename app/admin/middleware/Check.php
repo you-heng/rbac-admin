@@ -3,6 +3,7 @@ declare (strict_types = 1);
 
 namespace app\admin\middleware;
 
+use think\Exception;
 use think\facade\Cache;
 use app\admin\model\Dict as dictModel;
 use app\admin\model\BlackList as BlackListModel;
@@ -23,14 +24,14 @@ class Check
     {
         try {
             $url = Request::baseUrl();
+            $url = rtrim($url, '/');
+
             // 接口白名单
             $config = dictModel::where('key', 'in', ['white_list', 'jwt_key'])->column('key,val');
             $config = array_column($config, 'val', 'key');
             $config['white_list'] = json_decode($config['white_list'],true);
-            foreach($config['white_list'] as $v){
-                if($v == $url){
-                    return $next($request);
-                }
+            if(in_array($url, $config['white_list'])){
+                return $next($request);
             }
 
             // ip防火墙
@@ -55,8 +56,7 @@ class Check
             if(empty($uniquid) || empty($token)){
                 return json(['code' => 403, 'msg' => '请先登录!']);
             }
-//            $user = Cache::store('memcached')->get($uniquid);
-             $user = Cache::store('redis')->get($uniquid);
+            $user = Cache::store('memcached')->get($uniquid);
             $user = json_decode($user, true);
             $decode = JWT::decode($token, new Key($config['jwt_key'], 'HS256'));
             $time = time();
@@ -72,12 +72,11 @@ class Check
                 return $next($request);
             }
             $list = array_merge($user['role']['auth'], $config['white_list']);
-            foreach($list as $v){
-                if($v == $url){
-                    return $next($request);
-                }
+            if(in_array($url, $list)){
+                return $next($request);
             }
-        }catch (\Exception $e){
+            return json(['code' => 401, 'msg' => '您没有当前权限，如有需求请联系超级管理员']);
+        }catch (Exception $e){
             return json(['code' => 402, 'msg' => $e->getMessage()]);
         }
         return $next($request);
