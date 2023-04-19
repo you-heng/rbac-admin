@@ -29,7 +29,7 @@ class Check
             // 接口白名单
             $config = dictModel::where('key', 'in', ['white_list', 'jwt_key'])->column('key,val');
             $config = array_column($config, 'val', 'key');
-            $config['white_list'] = json_decode($config['white_list'],true);
+            $config['white_list'] = explode('+', $config['white_list']);
             if(in_array($url, $config['white_list'])){
                 return $next($request);
             }
