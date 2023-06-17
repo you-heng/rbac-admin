@@ -29,7 +29,8 @@
         "qiniu/php-sdk": "^7.7",
         "phpoffice/phpspreadsheet": "^1.25",
         "firebase/php-jwt": "^6.3",
-        "topthink/think-queue": "^3.0"
+        "topthink/think-queue": "^3.0",
+        "dtk-developer/openapi-sdk-php": "^1.0"
     },
     "require-dev": {
         "symfony/var-dumper": "^4.2",
